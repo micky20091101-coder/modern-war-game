@@ -15,7 +15,7 @@
         --surface-2: #f2f2f7;
         --fill: #f8f8fa;
         --fill-2: #f2f2f7;
-        --seg-track: #e9e9ee;
+        --seg-track: rgba(120,120,128,0.12);
         --text: #1c1c1e;
         --dim: #6e6e73;
         --border: #e3e3e8;
@@ -35,7 +35,7 @@
           --surface-2: #2c2c2e;
           --fill: #2c2c2e;
           --fill-2: #1c1c1e;
-          --seg-track: rgba(255, 255, 255, 0.12);
+          --seg-track: rgba(120,120,128,0.24);
           --text: #ffffff;
           --dim: #98989f;
           --border: #38383a;
@@ -71,27 +71,84 @@
       @media (prefers-reduced-motion: reduce) { .flow-line { animation: none; } }
       @keyframes gatherPulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 
-      /* ===== Liquid-glass Dock (motion package §1) ===== */
+      /* ===== Dock — motion package ch.1 layer accounting (web stack).
+         Bar, bottom→top (§1.2): (1) live backdrop: backdrop-filter
+         blur(26px) saturate(1.8) — the browser composites the REAL page
+         behind the bar, no bitmap layer to skip, so the §1.4 DarkGlass
+         bitmap branch never triggers and no solid ever fills in;
+         (2) double outer shadow 40/16/.16 + 10/3/.08 (dark .55/.40);
+         (3) tint gradient 155° #66/#40/#59FFFFFF (dark capped
+         #33/#22/#28 48484A-family); (4) gloss gradient 115°
+         #59/#0D/#00FFFFFF (dark #14/#08/#00), fixed, never follows the
+         finger; (5) 0.5px border #B3FFFFFF (dark #22) + top 1px
+         highlight ::before #F2FFFFFF (dark #26) inset 8px each side,
+         clipped inside the pill radius + inset bottom dark line
+         rgba(0,0,0,.06). Every alpha is a composite alpha — no solid
+         backing anywhere (red line 15). Palette switches ONLY on
+         prefers-color-scheme (the app appearance), never on content.
+         Pill = EXACTLY 4 layers (§1.3): double shadow (10/3/.10 +
+         3/1/.06) → translucent fill #F2FFFFFF (dark #8C787880 =
+         rgba(120,120,128,.55)) → 0.5px border #B3 (dark #22) → top
+         1px highlight ::after #F2 (dark #4D) inset 4px. No gloss, no
+         own backdrop on the pill. ===== */
       .dock-glass {
-        background: linear-gradient(155deg, rgba(255,255,255,0.4), rgba(255,255,255,0.25) 48%, rgba(255,255,255,0.35));
+        background:
+          linear-gradient(115deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.05) 38%, rgba(255,255,255,0) 62%),
+          linear-gradient(155deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.25) 55%, rgba(255,255,255,0.35) 100%);
         -webkit-backdrop-filter: blur(26px) saturate(1.8);
         backdrop-filter: blur(26px) saturate(1.8);
-        border: 0.5px solid rgba(255,255,255,0.7);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -0.5px 0 rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.16), 0 3px 10px rgba(0,0,0,0.08);
+        border: 0.5px solid rgba(255,255,255,0.70);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.16), 0 3px 10px rgba(0,0,0,0.08), inset 0 -0.5px 0 rgba(0,0,0,0.06);
         border-radius: 999px;
       }
+      .dock-glass::before {
+        content: ""; position: absolute; top: 0; left: 8px; right: 8px; height: 1px;
+        background: rgba(255,255,255,0.95); pointer-events: none;
+      }
       .dock-pill {
-        background: linear-gradient(155deg, rgba(255,255,255,0.55), rgba(255,255,255,0.32));
-        box-shadow: 0 2px 10px rgba(0,0,0,0.12), inset 0 0.5px 0 rgba(255,255,255,0.9);
+        background: rgba(255,255,255,0.95);
+        border: 0.5px solid rgba(255,255,255,0.70);
+        box-shadow: 0 3px 10px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
         border-radius: 999px;
+      }
+      .dock-pill::after {
+        content: ""; position: absolute; top: 0; left: 4px; right: 4px; height: 1px;
+        background: rgba(255,255,255,0.95); pointer-events: none;
       }
       @media (prefers-color-scheme: dark) {
         .dock-glass {
-          background: linear-gradient(155deg, rgba(28,28,30,0.55), rgba(28,28,30,0.42) 48%, rgba(28,28,30,0.5));
+          background:
+            linear-gradient(115deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 38%, rgba(255,255,255,0) 62%),
+            linear-gradient(155deg, rgba(72,72,74,0.20) 0%, rgba(44,44,46,0.13) 55%, rgba(58,58,60,0.16) 100%);
           border-color: rgba(255,255,255,0.13);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.55), 0 3px 10px rgba(0,0,0,0.40), inset 0 -0.5px 0 rgba(0,0,0,0.06);
         }
-        .dock-pill { background: rgba(255,255,255,0.16); }
+        .dock-glass::before { background: rgba(255,255,255,0.15); }
+        .dock-pill { background: rgba(120,120,128,0.55); border-color: rgba(255,255,255,0.13); }
+        .dock-pill::after { background: rgba(255,255,255,0.30); }
       }
+      /* identity + card helpers (readability pass) */
+      .me-badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #ffd75e; color: #4a3500; font-size: 11px; font-weight: 800; vertical-align: 2px; }
+      .legend-row { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 8px; padding: 7px 12px; border-radius: 14px; }
+      .legend-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; }
+      .legend-chip .lsw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex-shrink: 0; }
+      .chip-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .chip-lab { font-size: 12px; color: var(--dim); font-weight: 700; }
+      .u-chip { background: var(--fill); border-radius: 8px; padding: 2px 8px; font-size: 12.5px; font-weight: 600; }
+      .bicons { display: inline-flex; gap: 4px; vertical-align: middle; }
+      .bicon { position: relative; width: 24px; height: 24px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: var(--fill); color: var(--dim); opacity: 0.4; }
+      .bicon.on { opacity: 1; background: rgba(0,122,255,0.16); color: var(--text); }
+      .bicon i { position: absolute; top: -5px; right: -5px; background: #ff9500; color: #fff; border-radius: 999px; font-size: 10px; font-style: normal; padding: 0 4px; font-weight: 800; line-height: 1.5; }
+      .grp-lab { font-size: 12px; font-weight: 700; color: var(--dim); margin: 10px 0 6px; }
+      .opt-ic { display: inline-flex; width: 22px; height: 22px; border-radius: 6px; background: rgba(0,122,255,0.14); align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-right: 6px; vertical-align: -6px; }
+      .prov-card { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 0.5px solid rgba(128,128,128,0.25); }
+      .prov-card:first-of-type { border-top: none; }
+      .prov-name { font-size: 16.5px; font-weight: 800; margin: 0; }
+      .prov-sub { font-size: 12.5px; color: var(--dim); margin: 2px 0 6px; }
+      .prov-btns { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+      .prov-btns button { border: none; border-radius: 12px; padding: 10px 14px; font-size: 14px; font-weight: 700; background: var(--fill); color: var(--text); cursor: pointer; }
+      .prov-btns button.b1 { background: #007aff; color: #fff; }
+      .me-row { background: rgba(255,215,94,0.13); border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
       .hud-glass {
         background: rgba(255,255,255,0.88);
         -webkit-backdrop-filter: blur(20px) saturate(1.6);
@@ -119,7 +176,7 @@
       .mapwrap { position: absolute; inset: 0; }
       .mapwrap svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
       .hud-col { position: absolute; inset: 0 auto auto 0; width: 100%; pointer-events: none; z-index: 10; }
-      .hud-inner { margin: 0 auto; width: 100%; max-width: 760px; padding: 8px 12px 0; }
+      .hud-inner { margin: 0 auto; width: 100%; max-width: 760px; padding: max(8px, env(safe-area-inset-top)) 12px 0; }
       .hud-inner > * { pointer-events: auto; }
       .scrim { position: absolute; inset: 0 0 auto 0; height: calc(env(safe-area-inset-top) + 88px); z-index: 5; }
 
@@ -133,11 +190,11 @@
 
       .resbar { margin-top: 8px; display: flex; align-items: center; gap: 8px; border-radius: 16px; padding: 8px 12px; }
       .res-cell { flex: 1; min-width: 0; }
-      .res-label { font-size: 10.5px; line-height: 1; color: var(--dim); margin: 0; }
+      .res-label { font-size: 11px; line-height: 1; color: var(--dim); margin: 0; }
       .hud-glass .res-label { color: #6e6e73; }
       @media (prefers-color-scheme: dark) { .hud-glass .res-label { color: #98989f; } }
       .res-value { font-size: 17px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
-      .res-sub { font-size: 10.5px; line-height: 1.3; color: var(--dim); font-variant-numeric: tabular-nums; margin: 0; }
+      .res-sub { font-size: 11px; line-height: 1.3; color: var(--dim); font-variant-numeric: tabular-nums; margin: 0; }
       .hud-glass .res-sub { color: #6e6e73; }
       @media (prefers-color-scheme: dark) { .hud-glass .res-sub { color: #98989f; } }
       .res-sub.good { color: #34c759; font-weight: 600; }
@@ -165,10 +222,13 @@
 
       /* sliding segmented (motion package §2) */
       .seg { position: relative; height: 40px; border-radius: 999px; background: var(--seg-track); touch-action: none; display: flex; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-      .hud-glass .seg { background: #e9e9ee; }
-      @media (prefers-color-scheme: dark) { .hud-glass .seg { background: rgba(255,255,255,0.12); } .seg .seg-btn { color: #fff; } }
-      .seg-pill { position: absolute; top: 2px; height: 36px; border-radius: 999px; background: rgba(255,255,255,0.75); border: 0.5px solid rgba(255,255,255,0.65); box-shadow: 0 1px 4px rgba(0,0,0,0.18), inset 0 0.5px 0 rgba(255,255,255,0.9); }
-      @media (prefers-color-scheme: dark) { .seg-pill { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.16); } }
+      .hud-glass .seg { background: rgba(120,120,128,0.12); }
+      @media (prefers-color-scheme: dark) { .hud-glass .seg { background: rgba(120,120,128,0.24); } .seg .seg-btn { color: #fff; } }
+      /* segmented pill: EXACTLY 2 layers per package §2.1 — translucent
+         fill (#BFFFFFFF light / #40FFFFFF dark) + 1px edge (#33000000 /
+         #33FFFFFF). No shadow, no highlight (extra layers = ghosting). */
+      .seg-pill { position: absolute; top: 2px; height: 36px; border-radius: 999px; background: rgba(255,255,255,0.75); border: 1px solid rgba(0,0,0,0.20); }
+      @media (prefers-color-scheme: dark) { .seg-pill { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.20); } }
       .seg-btn { position: relative; z-index: 10; height: 40px; font-size: 13px; font-weight: 600; color: #3a3a3c; }
       .seg-btn.sel { color: #1c1c1e; font-weight: 700; }
       @media (prefers-color-scheme: dark) { .seg-btn.sel { color: #fff; } }
@@ -186,7 +246,7 @@
       .dock-btn.active { color: #007aff; }
       @media (prefers-color-scheme: dark) { .dock-btn.active { color: #0a84ff; } }
       .dock-btn .ic { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
-      .dock-btn .lb { font-size: 10.5px; font-weight: 600; }
+      .dock-btn .lb { font-size: 11px; font-weight: 600; }
 
       /* intervention rail */
       .rail { position: absolute; right: 10px; top: 34%; z-index: 20; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
@@ -195,8 +255,8 @@
       .rail-btn:disabled { opacity: 0.45; }
       .rail-btn.active { box-shadow: 0 0 0 2px #ff9500; }
       .rail-btn .glyph { display: flex; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; color: #fff; }
-      .rail-btn .cd { position: absolute; bottom: -4px; right: -4px; border-radius: 999px; background: #1c1c1e; padding: 0 6px; font-size: 9.5px; font-weight: 700; color: #fff; }
-      .rail-label { max-width: 44px; border-radius: 12px; padding: 4px 6px; text-align: center; font-size: 9.5px; line-height: 1.3; color: rgba(255,255,255,0.85); }
+      .rail-btn .cd { position: absolute; bottom: -4px; right: -4px; border-radius: 999px; background: #1c1c1e; padding: 0 6px; font-size: 11px; font-weight: 700; color: #fff; }
+      .rail-label { max-width: 48px; border-radius: 12px; padding: 4px 6px; text-align: center; font-size: 11px; line-height: 1.3; color: rgba(255,255,255,0.85); }
       .sanction-pick { border-radius: 16px; padding: 8px; }
       .sanction-pick p { margin: 0; padding: 0 4px 4px; font-size: 11px; font-weight: 600; color: var(--dim); }
       .sanction-pick button { display: block; width: 100%; border-radius: 999px; padding: 6px 12px; margin-bottom: 4px; text-align: left; font-size: 13px; font-weight: 600; color: #fff; }
@@ -234,7 +294,7 @@
       .weather-chip { display: flex; flex-shrink: 0; align-items: center; gap: 6px; border-radius: 999px; background: #e8f7fa; padding: 6px 10px; }
       @media (prefers-color-scheme: dark) { .weather-chip { background: #12303c; } }
       .weather-chip .wname { font-size: 13px; font-weight: 700; line-height: 1.2; }
-      .weather-chip .weff { font-size: 10px; color: var(--dim); line-height: 1.2; }
+      .weather-chip .weff { font-size: 11px; color: var(--dim); line-height: 1.2; }
       .forecast-box { margin-top: 8px; border-radius: 8px; background: #f2f8fb; padding: 6px 10px; font-size: 11px; line-height: 1.6; color: #33505f; }
       @media (prefers-color-scheme: dark) { .forecast-box { background: #12242e; color: #b8d4e2; } }
       .forecast-box b { color: var(--accent); }
@@ -288,7 +348,7 @@
       .cmp-name { font-size: 14px; font-weight: 600; margin: 0; }
       .cmp-name .sub { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--dim); }
       .bar-row { margin-top: 4px; display: flex; align-items: center; gap: 8px; }
-      .bar-glyph { display: flex; width: 20px; height: 20px; align-items: center; justify-content: center; border-radius: 6px; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+      .bar-glyph { display: flex; width: 20px; height: 20px; align-items: center; justify-content: center; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
       .bar-track { height: 8px; flex: 1; overflow: hidden; border-radius: 999px; background: var(--fill-2); }
       .bar-track > div { height: 100%; border-radius: 999px; transition: width 700ms; min-width: 3%; }
       .bar-val { width: 56px; text-align: right; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
@@ -318,7 +378,7 @@
       .diplo-note { padding: 4px 4px 0; font-size: 12px; line-height: 1.6; color: var(--dim); }
       .log-row { display: flex; width: 100%; align-items: flex-start; gap: 8px; border-radius: 12px; padding: 8px; text-align: left; }
       .log-row:hover { background: var(--fill); }
-      .log-kind { margin-top: 2px; flex-shrink: 0; border-radius: 6px; padding: 2px 6px; font-size: 10.5px; font-weight: 700; color: #fff; }
+      .log-kind { margin-top: 2px; flex-shrink: 0; border-radius: 6px; padding: 2px 6px; font-size: 11px; font-weight: 700; color: #fff; }
       .log-text { font-size: 13.5px; line-height: 1.6; }
       .log-text .q { margin-right: 4px; color: var(--dim); }
       .log-more { margin-top: 8px; width: 100%; border-radius: 999px; background: var(--fill-2); padding: 10px; font-size: 14px; font-weight: 600; }
@@ -403,9 +463,13 @@ const BUILDINGS = {
   commerce: { name: "商业区",   cost: 200, industryCost: 0,  desc: "资金 +55/级" },
   trade:    { name: "贸易站",   cost: 180, industryCost: 0,  desc: "资金 +40/级（港口 ×2）" },
   research: { name: "科研中心", cost: 240, industryCost: 0,  desc: "科技 +20/级（科技城 +50%）" },
-  arms:     { name: "军工厂",   cost: 260, industryCost: 20, desc: "解锁高级兵种，工业 +8/级，科技 +6/级（军工研发）" },
+  arms:     { name: "军工厂",   cost: 260, industryCost: 20, desc: "解锁高级兵种 · 工业+8 · 科技+6" },
   airdef:   { name: "防空系统", cost: 200, industryCost: 0,  desc: "削弱敌方空中力量 20%/级" },
 };
+/* one-char glyphs for building icon blocks (display only) */
+const BUILD_GLYPH = { factory: "工", commerce: "商", trade: "贸", research: "研", arms: "军", airdef: "防" };
+const UNIT_GLYPH = { inf: "步", tank: "坦", missile: "导", air: "机" };
+const BUILD_GROUPS = [["赚钱的", ["commerce", "trade"]], ["打仗的", ["arms", "airdef"]], ["变强的", ["factory", "research"]]];
 const REGION_TYPES = {
   industry: { name: "工业区", money: 110, industry: 26, tech: 0,  pop: 6 },
   port:     { name: "港口",   money: 120, industry: 6,  tech: 0,  pop: 8 },
@@ -415,10 +479,10 @@ const REGION_TYPES = {
   fortress: { name: "军事要塞", money: 35, industry: 10, tech: 0,  pop: 6 },
 };
 const STRATEGIES = {
-  economy:    { name: "经济优先", desc: "猛建商业与工厂，先把钱赚足", econ: 3, tech: 1, mil: 1, aggro: 0.15 },
-  technology: { name: "科技强国", desc: "重金砸科研，用科技等级压人", econ: 1, tech: 3, mil: 1, aggro: 0.2 },
-  military:   { name: "军事扩张", desc: "扩军优先，逮到弱邻就打；军工厂同步搞军工研发，科技不掉队", econ: 1, tech: 1, mil: 3, aggro: 0.75 },
-  balanced:   { name: "均衡发展", desc: "经济、科技、军备齐头并进", econ: 2, tech: 2, mil: 2, aggro: 0.35 },
+  economy:    { name: "赚钱", desc: "多建赚钱的，先把钱赚足", econ: 3, tech: 1, mil: 1, aggro: 0.15 },
+  technology: { name: "科技", desc: "砸钱升科技，等级压人", econ: 1, tech: 3, mil: 1, aggro: 0.2 },
+  military:   { name: "打仗", desc: "多造兵，逮到弱邻就打", econ: 1, tech: 1, mil: 3, aggro: 0.75 },
+  balanced:   { name: "均衡", desc: "钱、科技、兵一起涨", econ: 2, tech: 2, mil: 2, aggro: 0.35 },
 };
 const PERSONALITIES = {
   balanced:  { name: "均衡型", econ: 2, tech: 2, mil: 2, aggro: 0.35 },
@@ -428,7 +492,7 @@ const PERSONALITIES = {
 };
 const NATION_DEFS = [
   { key: "azure", name: "苍蓝共和国", color: "#4f83cc", personality: "balanced",
-    perk: "开局国库 +300 资金，且全域多驻 2 个步兵营",
+    perk: "开局多给 300 钱，全境多驻 2 支步兵",
     advisors: [ { role: "defense", name: "沈铎" }, { role: "economy", name: "林若澜" }, { role: "science", name: "高澈" } ] },
   { key: "crimson", name: "赤岩联邦", color: "#c0453a", personality: "expansion",
     perk: "开局首都多驻 2 辆坦克、4 个步兵营",
@@ -1539,7 +1603,8 @@ function regionView(w, r) {
     weatherEffect: (WEATHERS[r.weather] || {}).effect || "",
     forecast: forecastFor(w, r), temp: r.temp,
     terrain: REGION_DEFS[r.idx].terrain || "plains", intelHidden: intelHidden,
-    control: Math.round(w.control && w.control[r.idx] != null ? w.control[r.idx] : 100) };
+    control: Math.round(w.control && w.control[r.idx] != null ? w.control[r.idx] : 100),
+    pressure: (w.pressure && w.pressure[r.idx]) ? Object.assign({}, w.pressure[r.idx]) : {} };
 }
 function catalog() {
   return { units: UNITS, unitKeys: UNIT_KEYS, buildings: BUILDINGS, buildingKeys: BUILDING_KEYS,
@@ -1772,16 +1837,79 @@ function actPreviewAttack(fromIdx, toIdx, scale) {
    flip shocks the loser's neighbouring line provinces (chain recoil).
    ===================================================================== */
 const FLOW_PUSH_K = 0.22, FLOW_REGEN_K = 0.13, FLOW_FLIP_CONTROL = 32;
+/* v1.6 spray parity (APK Spray/Engine): per-source parallel streams cap,
+   relay supply decay per hop, shockwave on flip. */
+const MAX_STREAMS_PER_SOURCE = 3, RELAY_DECAY = 0.93, SHOCK_TICKS = 8;
 function ensureFluid(w) {
   if (!w) return;
   if (!w.control) { w.control = {}; for (const r of w.regions) w.control[r.idx] = 100; }
   if (!w.strain) { w.strain = {}; for (const r of w.regions) w.strain[r.idx] = 0; }
   if (!Array.isArray(w.flows)) w.flows = [];
   if (w.flowSeq == null) w.flowSeq = 0;
+  if (!w.pressure || typeof w.pressure !== "object") w.pressure = {}; // idx -> {ownerKey: seeded push progress}
+  if (!w.shockUntil || typeof w.shockUntil !== "object") w.shockUntil = {}; // idx -> flowClock expiry (8 flow-seconds)
+  if (w.flowClock == null) w.flowClock = 0;
+  for (const f of w.flows) { if (f.rl == null) f.rl = 0; if (!Array.isArray(f.route)) f.route = []; }
 }
-function flowRates(w, fromIdx, toIdx) {
+function findPath(fromIdx, toIdx) {
+  if (fromIdx === toIdx) return [];
+  const prev = {}; prev[fromIdx] = fromIdx;
+  const queue = [fromIdx];
+  while (queue.length) {
+    const cur = queue.shift();
+    for (const nb of neighbors(cur)) {
+      if (nb in prev) continue;
+      prev[nb] = cur;
+      if (nb === toIdx) {
+        const path = []; let c = toIdx;
+        while (c !== fromIdx) { path.push(c); c = prev[c]; }
+        return path.reverse();
+      }
+      queue.push(nb);
+    }
+  }
+  return null;
+}
+/* The actual fighting edge for origin->target: walk the BFS path through
+   own territory (relay provinces) to the first enemy province. */
+function flowEdge(w, ownerKey, fromIdx, toIdx) {
+  const path = findPath(fromIdx, toIdx);
+  if (!path || !path.length) return null;
+  let src = fromIdx;
+  for (const step of path) {
+    const r = w.regions[step];
+    if (r && r.ownerKey === ownerKey) { src = step; continue; }
+    return [src, step];
+  }
+  return null;
+}
+function relayHops(fromIdx, edgeSrc, path) {
+  if (edgeSrc === fromIdx || !path) return 0;
+  const i = path.indexOf(edgeSrc);
+  return i < 0 ? 0 : i + 1;
+}
+function streamsFrom(w, fromIdx) { return w.flows.filter((f) => f.from === fromIdx).length; }
+function cancelFlowEdge(w, ownerKey, fromIdx, toIdx) {
+  ensureFluid(w);
+  const before = w.flows.length;
+  w.flows = w.flows.filter((f) => !(f.ownerKey === ownerKey && f.from === fromIdx && f.to === toIdx));
+  return w.flows.length !== before;
+}
+/* APK-style spray rate (0..7) derived from the same atk/def totals:
+   shareRatio = atk/(atk+def); pushRate = clamp((shareRatio-0.40)*24, 0, 7).
+   Particle density / speed formulas consume THIS rate, exactly as APK. */
+function sprayRateOf(atkTotal, defTotal) {
+  const ratio = (atkTotal + defTotal) > 0 ? atkTotal / (atkTotal + defTotal) : 0;
+  return Math.max(0, Math.min(7, (ratio - 0.40) * 24));
+}
+function sprayParticleCount(pushRate) { return Math.max(3, Math.min(26, Math.round(3 + pushRate * 2.4))); }
+function sprayTravelPeriodMs(pushRate) { return Math.max(650, Math.min(1700, 1700 - pushRate * 130)); }
+function flowRates(w, fromIdx, toIdx, opts) {
+  opts = opts || {};
+  const relay = opts.relay || 0;
+  const share = opts.share == null ? 1 : opts.share;
   const from = w.regions[fromIdx], to = w.regions[toIdx];
-  if (!from || !to) return { atkTotal: 0, defTotal: 0, push: 0, regen: 0, net: 0 };
+  if (!from || !to) return { atkTotal: 0, defTotal: 0, push: 0, regen: 0, net: 0, sprayRate: 0, relay: relay, share: share, parts: [] };
   const committed = emptyUnits();
   for (const k of UNIT_KEYS) committed[k] = Math.max(0, Math.round(from.units[k] * 0.7));
   const weather = to.weather;
@@ -1796,12 +1924,26 @@ function flowRates(w, fromIdx, toIdx) {
   }
   if (weather === "snow") weatherMult *= 0.9;
   if (weather === "fog") weatherMult *= 0.92;
-  const atkTotal = atk.total * weatherMult, defTotal = def.total;
+  const parts = [];
+  let atkTotal = atk.total * weatherMult;
+  const defTotal = def.total;
+  if (share < 1) { atkTotal *= share; parts.push("多股喷洒分流：本股占源省驻军 ×" + share.toFixed(2) + "（同源并行分兵）"); }
+  if (relay > 0) {
+    const decay = Math.pow(RELAY_DECAY, relay);
+    atkTotal *= decay;
+    parts.push("远程接力：经 " + relay + " 省接力，补给衰减 ×" + decay.toFixed(2));
+  }
   ensureFluid(w);
   const sFrom = w.strain[fromIdx] || 0, sTo = w.strain[toIdx] || 0;
   const push = atkTotal * (1 - 0.5 * sFrom) * FLOW_PUSH_K;
-  const regen = defTotal * (1 - 0.55 * sTo) * FLOW_REGEN_K;
-  return { atkTotal: Math.round(atkTotal), defTotal: Math.round(defTotal), push: push, regen: regen, net: push - regen };
+  let regen = defTotal * (1 - 0.55 * sTo) * FLOW_REGEN_K;
+  if ((w.shockUntil[toIdx] || 0) > w.flowClock) { regen *= 0.8; parts.push("防线动摇：邻省刚陷落，反推 ×0.8"); }
+  return { atkTotal: Math.round(atkTotal), defTotal: Math.round(defTotal), push: push, regen: regen, net: push - regen,
+    sprayRate: sprayRateOf(atkTotal, defTotal), relay: relay, share: share, parts: parts };
+}
+/* Live rate of an already-open flow: its own relay + its current share. */
+function flowRatesLive(w, f) {
+  return flowRates(w, f.from, f.to, { relay: f.rl || 0, share: 1 / Math.max(1, streamsFrom(w, f.from)) });
 }
 function checkEndStates(w) {
   for (const nation of Object.values(w.nations)) {
@@ -1815,21 +1957,28 @@ function checkEndStates(w) {
   if (pr >= w.regions.length) w.status = "won";
   else if (pr === 0) w.status = "lost";
 }
-function startFlowInternal(w, ownerKey, fromIdx, toIdx) {
+function startFlowInternal(w, ownerKey, originIdx, targetIdx) {
   ensureFluid(w);
-  const from = w.regions[fromIdx], to = w.regions[toIdx];
-  if (!from || !to || from.ownerKey !== ownerKey || to.ownerKey === ownerKey) return false;
-  if (!neighbors(fromIdx).includes(toIdx)) return false;
-  if (totalUnits(from.units) < 3) return false;
-  w.flows = w.flows.filter((f) => !(f.ownerKey === ownerKey && f.from === fromIdx));
-  const mine = w.flows.filter((f) => f.ownerKey === ownerKey);
-  if (mine.length >= 2) w.flows.splice(w.flows.indexOf(mine[0]), 1);
-  w.flows.push({ id: ++w.flowSeq, from: fromIdx, to: toIdx, ownerKey: ownerKey });
+  const origin = w.regions[originIdx], target = w.regions[targetIdx];
+  if (!origin || !target || origin.ownerKey !== ownerKey || target.ownerKey === ownerKey) return false;
+  const path = findPath(originIdx, targetIdx);
+  if (!path || !path.length) return false;
+  const edge = flowEdge(w, ownerKey, originIdx, targetIdx);
+  if (!edge) return false;
+  const src = w.regions[edge[0]];
+  if (!src || totalUnits(src.units) < 3) return false;
+  const sameEdge = w.flows.some((f) => f.ownerKey === ownerKey && f.from === edge[0] && f.to === edge[1]);
+  if (!sameEdge && streamsFrom(w, edge[0]) >= MAX_STREAMS_PER_SOURCE) return false;
+  w.flows = w.flows.filter((f) => !(f.ownerKey === ownerKey && f.from === edge[0] && f.to === edge[1]));
+  const rest = path.slice(path.indexOf(edge[1]) + 1);
+  w.flows.push({ id: ++w.flowSeq, from: edge[0], to: edge[1], ownerKey: ownerKey, rl: relayHops(originIdx, edge[0], path), route: rest });
   return true;
 }
 function flipRegion(w, f, flips) {
+  ensureFluid(w);
   const from = w.regions[f.from], to = w.regions[f.to];
   const oldOwner = to.ownerKey, newOwner = f.ownerKey;
+  const garrisonPower = rawPower(to.units); // captured BEFORE any troop movement: shock formula input (APK flipProvince)
   const atkNation = w.nations[newOwner], defNation = w.nations[oldOwner];
   const committed = emptyUnits();
   for (const k of UNIT_KEYS) committed[k] = Math.max(0, Math.round(from.units[k] * 0.7));
@@ -1842,9 +1991,22 @@ function flipRegion(w, f, flips) {
   w.control[to.idx] = FLOW_FLIP_CONTROL;
   w.strain[to.idx] = 0.25;
   w.strain[f.from] = Math.min(0.85, (w.strain[f.from] || 0) + 0.08);
+  if (w.pressure[to.idx]) delete w.pressure[to.idx];
+  /* Shockwave (APK v1.6): drop = 8 + 6 x min(1, fallen garrison power / 240)
+     in [8,14]. Each old-owner neighbour: control -drop (floor 5), seeded
+     with newOwner pressure +drop x 0.5, line shaken for 8 flow-ticks
+     (regen x0.8 in flowRates). Every hit is written to the ledger. */
+  const shockDrop = 8 + 6 * Math.min(1, garrisonPower / 240);
+  const shocked = [];
   for (const nIdx of neighbors(to.idx)) {
     const nr = w.regions[nIdx];
-    if (nr && nr.ownerKey === oldOwner) w.control[nIdx] = Math.max(5, (w.control[nIdx] != null ? w.control[nIdx] : 100) - 8);
+    if (!nr || nr.ownerKey !== oldOwner) continue;
+    w.control[nIdx] = Math.max(5, (w.control[nIdx] != null ? w.control[nIdx] : 100) - shockDrop);
+    if (!w.pressure[nIdx]) w.pressure[nIdx] = {};
+    w.pressure[nIdx][newOwner] = Math.min(99, (w.pressure[nIdx][newOwner] || 0) + shockDrop * 0.5);
+    w.shockUntil[nIdx] = w.flowClock + SHOCK_TICKS;
+    shocked.push(nIdx);
+    elog(w, "battle", "💥 冲击波：「" + to.name + "」陷落，邻省「" + nr.name + "」控制度 -" + Math.round(shockDrop) + "%、" + (atkNation || {}).name + "推进压力 +" + Math.round(shockDrop * 0.5) + "%");
   }
   w.interventions["_lastCapture"] = w.quarter;
   w.interventions["occ_" + to.idx] = w.quarter;
@@ -1858,14 +2020,24 @@ function flipRegion(w, f, flips) {
   if (isCapital) elog(w, "epic", "⚑ 首都攻陷！" + (atkNation || {}).name + "攻陷了" + (defNation || {}).name + "的核心区「" + to.name + "」。");
   elog(w, "battle", (atkNation || {}).name + "的兵力冲满「" + to.name + "」，" + (defNation || {}).name + "防线崩解，该省易主（" + from.name + "方向）。");
   if (atkNation) gainAdvisorXp(w, atkNation.key, "defense", 30);
+  /* Route continuation (APK): a relayed stream that still has path left
+     keeps pushing from the freshly flipped province. */
+  if (Array.isArray(f.route) && f.route.length) {
+    const next = f.route[0];
+    const nr = w.regions[next];
+    if (nr && nr.ownerKey !== newOwner) {
+      w.flows.push({ id: ++w.flowSeq, from: to.idx, to: next, ownerKey: newOwner, rl: 0, route: f.route.slice(1) });
+    }
+  }
   checkEndStates(w);
   checkTierPromotion(w);
-  flips.push({ idx: to.idx, from: f.from, oldOwner: oldOwner, newOwner: newOwner, name: to.name });
+  flips.push({ idx: to.idx, from: f.from, oldOwner: oldOwner, newOwner: newOwner, name: to.name, shock: shocked, shockDrop: Math.round(shockDrop * 10) / 10 });
 }
 function resolveFlows(w, dt) {
   ensureFluid(w);
   const flips = [];
   if (dt <= 0 || w.status !== "playing") return flips;
+  w.flowClock += dt; // 1 flow-second = 1 shock tick unit (shock lasts SHOCK_TICKS)
   const targeted = new Set(w.flows.map((f) => f.to));
   const busy = new Set();
   for (const f of w.flows) { busy.add(f.from); busy.add(f.to); }
@@ -1876,8 +2048,18 @@ function resolveFlows(w, dt) {
     if (!from || !to || from.ownerKey !== f.ownerKey || to.ownerKey === f.ownerKey) { dead.push(f); continue; }
     if (to.ownerKey === w.playerKey && w.truces[f.ownerKey]) { dead.push(f); continue; }
     if (f.ownerKey === w.playerKey && w.truces[to.ownerKey]) { dead.push(f); continue; }
-    const rates = flowRates(w, f.from, f.to);
-    const net = rates.net;
+    const rates = flowRatesLive(w, f);
+    let net = rates.net;
+    /* Seeded shock pressure converts into real drain while this owner's
+       stream is live: the seeded amount itself is the APK number; here it
+       burns off at 25%/s of flow time on top of the stream's own net. */
+    const seeded = w.pressure[f.to] && w.pressure[f.to][f.ownerKey] ? w.pressure[f.to][f.ownerKey] : 0;
+    if (seeded > 0 && net > 0) {
+      const conv = Math.min(seeded, seeded * 0.25 * dt + 0.001);
+      net += seeded * 0.25;
+      w.pressure[f.to][f.ownerKey] = seeded - conv;
+      if (w.pressure[f.to][f.ownerKey] <= 0.01) delete w.pressure[f.to][f.ownerKey];
+    }
     if (net > 0) {
       w.control[f.to] = Math.max(0, (w.control[f.to] != null ? w.control[f.to] : 100) - net * dt);
       w.strain[f.to] = Math.min(0.85, (w.strain[f.to] || 0) + 0.018 * dt);
@@ -1907,7 +2089,12 @@ function resolveFlows(w, dt) {
 function flowViewOf(w) {
   ensureFluid(w);
   return { control: Object.assign({}, w.control), strain: Object.assign({}, w.strain),
-    flows: w.flows.map((f) => ({ from: f.from, to: f.to, ownerKey: f.ownerKey })) };
+    pressure: JSON.parse(JSON.stringify(w.pressure || {})),
+    flows: w.flows.map((f) => {
+      const r = flowRatesLive(w, f);
+      return { from: f.from, to: f.to, ownerKey: f.ownerKey, rl: f.rl || 0,
+        push: r.push, regen: r.regen, net: r.net, sprayRate: r.sprayRate, share: r.share };
+    }) };
 }
 function actStartFlow(fromIdx, toIdx) {
   if (!world || world.status !== "playing") return actResult(false, "当前没有进行中的游戏");
@@ -1915,34 +2102,44 @@ function actStartFlow(fromIdx, toIdx) {
   if (!from || !to) return actResult(false, "区域不存在");
   if (from.ownerKey !== world.playerKey) return actResult(false, "出发区域不是你的");
   if (to.ownerKey === world.playerKey) return actResult(false, "目标已经是你的区域");
-  if (!neighbors(fromIdx).includes(toIdx)) return actResult(false, "只能泼向相邻省份");
-  if (world.truces[to.ownerKey]) return actResult(false, "与该国停战中——停战到期前不能进攻");
-  if (totalUnits(from.units) < 3) return actResult(false, "驻军太少（至少 3 支部队），先生产再泼兵");
-  if (!startFlowInternal(world, world.playerKey, fromIdx, toIdx)) return actResult(false, "无法泼兵");
+  ensureFluid(world);
+  const edge = flowEdge(world, world.playerKey, fromIdx, toIdx);
+  if (!edge) return actResult(false, "没有可达路径（中间全是己方或地图不通）");
+  const edgeTo = world.regions[edge[1]];
+  if (world.truces[edgeTo.ownerKey]) return actResult(false, "与该国停战中——停战到期前不能进攻");
+  if (totalUnits(world.regions[edge[0]].units) < 3) return actResult(false, "前线源省驻军太少（至少 3 支部队），先生产再泼兵");
+  if (!startFlowInternal(world, world.playerKey, fromIdx, toIdx)) return actResult(false, "开不了流：同一源省已喷满 " + MAX_STREAMS_PER_SOURCE + " 股，或目标不可达");
   persist();
   return actResult(true, null, []);
 }
-function actStopFlow(fromIdx) {
+function actStopFlow(fromIdx, toIdx) {
   if (!world || world.status !== "playing") return actResult(false, "当前没有进行中的游戏");
   ensureFluid(world);
-  world.flows = world.flows.filter((f) => !(f.ownerKey === world.playerKey && (fromIdx == null || f.from === fromIdx)));
+  world.flows = world.flows.filter((f) => !(f.ownerKey === world.playerKey &&
+    (fromIdx == null || f.from === fromIdx) && (toIdx == null || f.to === toIdx)));
   persist();
   return actResult(true, null, []);
 }
 function actFlowPreview(fromIdx, toIdx) {
-  const fail = (error) => ({ ok: false, error: error, atkTotal: 0, defTotal: 0, push: 0, regen: 0, net: 0, control: 100, etaSec: null });
+  const fail = (error) => ({ ok: false, error: error, atkTotal: 0, defTotal: 0, push: 0, regen: 0, net: 0, control: 100, etaSec: null, edgeFrom: null, edgeTo: null, relay: 0, share: 1, parts: [], sprayRate: 0 });
   if (!world || world.status !== "playing") return fail("当前没有进行中的游戏");
   const from = world.regions[fromIdx], to = world.regions[toIdx];
   if (!from || !to) return fail("区域不存在");
   if (from.ownerKey !== world.playerKey) return fail("出发区域不是你的");
   if (to.ownerKey === world.playerKey) return fail("目标已经是你的区域");
-  if (!neighbors(fromIdx).includes(toIdx)) return fail("只能泼向相邻省份");
   ensureFluid(world);
-  const rates = flowRates(world, fromIdx, toIdx);
-  const control = world.control[toIdx] != null ? world.control[toIdx] : 100;
+  const path = findPath(fromIdx, toIdx);
+  const edge = flowEdge(world, world.playerKey, fromIdx, toIdx);
+  if (!edge || !path) return fail("没有可达的前线边（目标已是己方纵深或地图不通）");
+  const relay = relayHops(fromIdx, edge[0], path);
+  const already = world.flows.some((f) => f.ownerKey === world.playerKey && f.from === edge[0] && f.to === edge[1]);
+  const share = 1 / Math.max(1, streamsFrom(world, edge[0]) + (already ? 0 : 1));
+  const rates = flowRates(world, edge[0], edge[1], { relay: relay, share: share });
+  const control = world.control[edge[1]] != null ? world.control[edge[1]] : 100;
   return { ok: true, error: null, atkTotal: rates.atkTotal, defTotal: rates.defTotal,
     push: rates.push, regen: rates.regen, net: rates.net, control: Math.round(control),
-    etaSec: rates.net > 0 ? Math.ceil(control / rates.net) : null };
+    etaSec: rates.net > 0 ? Math.ceil(control / rates.net) : null,
+    edgeFrom: edge[0], edgeTo: edge[1], relay: relay, share: share, parts: rates.parts, sprayRate: rates.sprayRate };
 }
 function actFlowTick(dtMs) {
   if (!world || world.status !== "playing") return { ok: false, flips: [], flowView: null, state: null };
@@ -2020,10 +2217,19 @@ const TERRAIN_FILL = {
 };
 function capPt(idx) { const g = GEO_REGIONS[idx]; return { x: g.capX, y: g.capY }; }
 function cenPt(idx) { const g = GEO_REGIONS[idx]; return { x: g.cx, y: g.cy }; }
+/* Map label sizing (APK MapText parity): screen size = base x (1 + 0.30 x
+   max(0, k-1)) — never below the k=1 readable size, monotonically growing
+   with zoom. Paint size inside the k-scaled layer = screen factor / k.
+   Bases are in k=1 screen-equivalent map units. */
+function labelGrowth(k) { return 1 + 0.30 * Math.max(0, (k || 1) - 1); }
+function labelPaint(base, k) { return base * labelGrowth(k) / Math.max(1, k || 1); }
+const LBL_PROV = 15, LBL_PROV_CORE = 17.5, LBL_CAPITAL = 11.5, LBL_TEMP = 10.5, LBL_CHIP = 11, LBL_CTRL = 11, LBL_GEO = 12, LBL_SEA = 17;
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
 function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
-function weatherGlyph(kind, x, y) {
+function weatherGlyph(kind, x, y, sc) {
+  sc = sc == null ? 1 : sc;
+  const T = (inner) => '<g transform="translate(' + x + ' ' + y + ') scale(' + sc + ')">' + inner + '</g>';
   if (kind === "clear" || kind === "drought") {
     const col = kind === "clear" ? "#ffd75e" : "#ffab4a";
     let rays = "";
@@ -2031,22 +2237,22 @@ function weatherGlyph(kind, x, y) {
       const rad = a * Math.PI / 180;
       rays += '<line x1="' + (Math.cos(rad) * 4.4) + '" y1="' + (Math.sin(rad) * 4.4) + '" x2="' + (Math.cos(rad) * 6.1) + '" y2="' + (Math.sin(rad) * 6.1) + '"/>';
     }
-    return '<g transform="translate(' + x + ' ' + y + ')" stroke="' + col + '" stroke-width="1.3"><circle r="3.2" fill="' + col + '" stroke="none"/>' + rays + '</g>';
+    return T('<g stroke="' + col + '" stroke-width="1.3"><circle r="3.2" fill="' + col + '" stroke="none"/>' + rays + '</g>');
   }
   if (kind === "snow") {
     let flakes = "";
     for (const dx of [-4, 0, 4]) {
       flakes += '<g transform="translate(' + dx + ' 0)"><line x1="-2" y1="0" x2="2" y2="0"/><line x1="-1" y1="-1.8" x2="1" y2="1.8"/><line x1="-1" y1="1.8" x2="1" y2="-1.8"/></g>';
     }
-    return '<g transform="translate(' + x + ' ' + y + ')" stroke="#ffffff" stroke-width="1.1">' + flakes + '</g>';
+    return T('<g stroke="#ffffff" stroke-width="1.1">' + flakes + '</g>');
   }
   if (kind === "fog") {
-    return '<g transform="translate(' + x + ' ' + y + ')" stroke="#d7dee3" stroke-width="1.5" stroke-linecap="round"><line x1="-6" y1="-2.6" x2="5" y2="-2.6"/><line x1="-4" y1="0.6" x2="6.4" y2="0.6"/><line x1="-6" y1="3.8" x2="3.6" y2="3.8"/></g>';
+    return T('<g stroke="#d7dee3" stroke-width="1.5" stroke-linecap="round"><line x1="-6" y1="-2.6" x2="5" y2="-2.6"/><line x1="-4" y1="0.6" x2="6.4" y2="0.6"/><line x1="-6" y1="3.8" x2="3.6" y2="3.8"/></g>');
   }
   let extra = "";
   if (kind === "rain") extra = '<g stroke="#6cb2e4" stroke-width="1.3" stroke-linecap="round"><line x1="-3" y1="4.6" x2="-4" y2="7"/><line x1="0.6" y1="4.6" x2="-0.4" y2="7"/><line x1="4.2" y1="4.6" x2="3.2" y2="7"/></g>';
   if (kind === "storm") extra = '<polygon points="1.4,3.4 -1.8,8 0.6,8 -1.2,12.4 3.4,6.6 1.2,6.6" fill="#ffd75e"/>';
-  return '<g transform="translate(' + x + ' ' + y + ')"><g fill="#dbe4ea"><circle cx="-3.4" cy="0.8" r="3"/><circle cx="1.6" cy="-0.8" r="3.9"/><circle cx="5.4" cy="1" r="2.6"/></g>' + extra + '</g>';
+  return T('<g fill="#dbe4ea"><circle cx="-3.4" cy="0.8" r="3"/><circle cx="1.6" cy="-0.8" r="3.9"/><circle cx="5.4" cy="1" r="2.6"/></g>' + extra);
 }
 function tankGlyph(x, y, color) {
   return '<g transform="translate(' + x + ' ' + y + ')"><circle r="14" fill="#00000055"/><rect x="-10" y="-4.8" width="20" height="9.6" rx="3.2" fill="' + color + '" stroke="#10151a" stroke-width="1"/><rect x="-3.6" y="-8" width="10" height="6.4" rx="2" fill="' + color + '" stroke="#10151a" stroke-width="1"/><line x1="5.6" y1="-4.8" x2="14.6" y2="-4.8" stroke="#10151a" stroke-width="2"/></g>';
@@ -2125,7 +2331,7 @@ function animateViewTo(target, dur) {
   const from = { k: mapView.k, tx: mapView.tx, ty: mapView.ty };
   const to = clampView({ k: target.k, tx: target.tx, ty: target.ty });
   if (REDUCED || (Math.abs(to.k - from.k) < 0.001 && Math.abs(to.tx - from.tx) < 0.5 && Math.abs(to.ty - from.ty) < 0.5)) {
-    mapView.k = to.k; mapView.tx = to.tx; mapView.ty = to.ty; applyViewNow(); return;
+    mapView.k = to.k; mapView.tx = to.tx; mapView.ty = to.ty; applyViewNow(); rescaleLabelsIfNeeded(); return;
   }
   const t0 = performance.now();
   const step = (now) => {
@@ -2137,7 +2343,7 @@ function animateViewTo(target, dur) {
     mapView.ty = from.ty + (to.ty - from.ty) * e;
     applyViewNow();
     if (t < 1) requestAnimationFrame(step);
-    else { mapView.k = to.k; mapView.tx = to.tx; mapView.ty = to.ty; applyViewNow(); }
+    else { mapView.k = to.k; mapView.tx = to.tx; mapView.ty = to.ty; applyViewNow(); rescaleLabelsIfNeeded(); }
   };
   requestAnimationFrame(step);
 }
@@ -2183,20 +2389,21 @@ function renderMapStatic(mr, opts) {
   s += '<rect x="-400" y="-400" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" fill="url(#ocean)"/>';
   s += '<g class="view-g" transform="translate(' + mapView.tx + ' ' + mapView.ty + ') scale(' + mapView.k + ')">';
   s += '<rect x="-400" y="-400" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" fill="url(#ocean)"/>';
-  s += '<text x="52" y="430" font-size="17" fill="#9fc6de" opacity="0.5" font-style="italic">黄 海</text>';
-  s += '<text x="540" y="330" font-size="17" fill="#9fc6de" opacity="0.5" font-style="italic">东 海</text>';
-  s += '<text x="300" y="762" font-size="14" fill="#9fc6de" opacity="0.45" font-style="italic">济州海峡</text>';
+  s += '<text x="52" y="430" font-size="' + labelPaint(LBL_SEA, mapView.k) + '" fill="#9fc6de" opacity="0.5" font-style="italic">黄 海</text>';
+  s += '<text x="540" y="330" font-size="' + labelPaint(LBL_SEA, mapView.k) + '" fill="#9fc6de" opacity="0.5" font-style="italic">东 海</text>';
+  s += '<text x="300" y="762" font-size="' + labelPaint(14, mapView.k) + '" fill="#9fc6de" opacity="0.45" font-style="italic">济州海峡</text>';
   for (const g of GEO_REGIONS) s += '<path d="' + g.path + '" fill="#42563a" transform="translate(2.5 3.5)" opacity="0.55"/>';
   for (const r of mr) {
     const g = GEO_REGIONS[r.idx];
     const color = nc(r.ownerKey);
     const isSel = opts.selected === r.idx, isSrc = opts.sourceIdx === r.idx, isHi = opts.highlight === r.idx;
     const isHover = hoverIdx === r.idx && !isSel && !isHi;
+    const isMineR = opts.playerKey != null && r.ownerKey === opts.playerKey;
     s += '<g><path d="' + g.path + '" fill="' + (TERRAIN_FILL[r.terrain] || "#77975c") + '"/>' +
       '<path d="' + g.path + '" fill="' + color + '" opacity="' + (isSel ? 0.52 : 0.36) + '" style="transition:fill 0.8s ease,opacity 0.3s ease"/>' +
       '<path d="' + g.path + '" data-region-idx="' + r.idx + '" fill="transparent" stroke="' +
-        (isSel || isHi ? "#ffd75e" : (isSrc || isHover) ? "#ffffff" : color) + '" stroke-width="' +
-        (isSel || isHi ? 3 : isSrc ? 2.6 : isHover ? 2 : 1.2) + '" stroke-opacity="' + (isSel || isHi || isSrc || isHover ? 1 : 0.75) + '" style="cursor:pointer"><title>' + r.name + '（' + r.capital + '）</title></path>';
+        (isSel || isHi ? "#ffd75e" : (isSrc || isHover || isMineR) ? "#ffffff" : color) + '" stroke-width="' +
+        (isSel || isHi ? 3 : isSrc ? 2.6 : isHover ? 2 : isMineR ? 2 : 1.2) + '" stroke-opacity="' + (isSel || isHi || isSrc || isHover ? 1 : isMineR ? 0.95 : 0.75) + '" style="cursor:pointer"><title>' + r.name + '（' + r.capital + '）</title></path>';
     if (isSrc) s += '<circle cx="' + g.capX + '" cy="' + g.capY + '" r="17" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.85" class="anim-front" style="animation:gatherPulse 1.2s ease-in-out infinite"/>';
     s += '</g>';
   }
@@ -2208,12 +2415,12 @@ function renderMapStatic(mr, opts) {
       s += '<polygon points="' + x + ',' + (y - 7) + ' ' + (x - 5.4) + ',' + (y + 3.4) + ' ' + (x + 5.4) + ',' + (y + 3.4) + '" fill="#5d5148" stroke="#3e362f" stroke-width="0.6"/>';
     });
     const lp = (ptsArr[1] || "0,0").split(",").map(Number);
-    s += '<text x="' + ((lp[0] || 0) + 8) + '" y="' + (lp[1] || 0) + '" font-size="9.5" fill="#e8ddc8" stroke="#2c2620" stroke-width="2.4" paint-order="stroke" opacity="0.9">' + m.name + '</text></g>';
+    s += '<text x="' + ((lp[0] || 0) + 8) + '" y="' + (lp[1] || 0) + '" font-size="' + labelPaint(LBL_GEO, mapView.k) + '" fill="#e8ddc8" stroke="#2c2620" stroke-width="2.4" paint-order="stroke" opacity="0.9">' + m.name + '</text></g>';
   }
   for (const rv of GEO_RIVERS) {
     const lp = (rv.pts.split(" ")[1] || "0,0").split(",").map(Number);
     s += '<g><polyline points="' + rv.pts + '" fill="none" stroke="#4a90c2" stroke-width="2.6" opacity="0.65" stroke-linecap="round"/>' +
-      '<text x="' + (lp[0] || 0) + '" y="' + ((lp[1] || 0) - 5) + '" font-size="9" fill="#bfe0f5" stroke="#0c2233" stroke-width="2.2" paint-order="stroke" opacity="0.9">' + rv.name + '</text></g>';
+      '<text x="' + (lp[0] || 0) + '" y="' + ((lp[1] || 0) - 5) + '" font-size="' + labelPaint(LBL_GEO, mapView.k) + '" fill="#bfe0f5" stroke="#0c2233" stroke-width="2.2" paint-order="stroke" opacity="0.9">' + rv.name + '</text></g>';
   }
   const c26 = capPt(26), c27 = capPt(27);
   s += '<line x1="' + c26.x + '" y1="' + c26.y + '" x2="' + c27.x + '" y2="' + c27.y + '" stroke="#bfe3ff" stroke-opacity="0.45" stroke-width="1.4" stroke-dasharray="3 5"/>';
@@ -2254,18 +2461,22 @@ function renderMapStatic(mr, opts) {
   for (const r of mr) {
     const g = GEO_REGIONS[r.idx];
     const color = nc(r.ownerKey);
-    const nameFs = r.isCore ? 12.5 : 11;
+    const nameBase = r.isCore ? LBL_PROV_CORE : LBL_PROV;
+    const nameFs = labelPaint(nameBase, mapView.k);
+    const capFs = labelPaint(LBL_CAPITAL, mapView.k), tmpFs = labelPaint(LBL_TEMP, mapView.k);
+    const wxScale = labelPaint(11, mapView.k) / 11;
     // small weather icon anchored just left of the province name, inside the
-    // view transform so it pans/zooms with the map (no free-floating layers)
-    const wxX = g.cx - (r.name.length * nameFs) / 2 - 11;
+    // view transform so it pans/zooms with the map (no free-floating layers);
+    // anchor offset uses the UNSCALED base width so icon tracks the name edge
+    const wxX = g.cx - (r.name.length * nameBase) / 2 - 13;
     const wxY = g.cy - 8;
     s += '<g pointer-events="none">' +
       '<text x="' + g.cx + '" y="' + (g.cy - 4) + '" text-anchor="middle" font-size="' + nameFs + '" font-weight="' + (r.isCore ? 800 : 600) + '" fill="#ffffff" stroke="#0c1c26" stroke-width="2.8" paint-order="stroke" opacity="' + (showLabels || r.isCore ? 1 : 0.35) + '">' + r.name + '</text>' +
       '<circle cx="' + g.capX + '" cy="' + g.capY + '" r="' + (r.isCore ? 4.6 : 3) + '" fill="#f6f9fb" stroke="#22303a" stroke-width="1.2"/>' +
       (r.isCore ? '<circle cx="' + g.capX + '" cy="' + g.capY + '" r="8" fill="none" stroke="' + color + '" stroke-width="1.6"/>' : '') +
-      '<text x="' + g.capX + '" y="' + (g.capY + 13.5) + '" text-anchor="middle" font-size="8.6" fill="#eaf3f9" stroke="#0c1c26" stroke-width="2.2" paint-order="stroke">' + r.capital + (r.type === "port" ? " ⚓" : "") + '</text>' +
-      weatherGlyph(r.weather, wxX, wxY) +
-      '<text x="' + wxX + '" y="' + (g.cy + 9) + '" text-anchor="middle" font-size="7.6" fill="#cfe2ee" stroke="#0c1c26" stroke-width="2" paint-order="stroke">' + r.temp + '°</text>' +
+      '<text x="' + g.capX + '" y="' + (g.capY + 15) + '" text-anchor="middle" font-size="' + capFs + '" fill="#eaf3f9" stroke="#0c1c26" stroke-width="2.2" paint-order="stroke">' + r.capital + (r.type === "port" ? " ⚓" : "") + (r.isCore && opts.playerKey != null && r.ownerKey === opts.playerKey ? " · 我" : "") + '</text>' +
+      weatherGlyph(r.weather, wxX, wxY, wxScale) +
+      '<text x="' + wxX + '" y="' + (g.cy + 11) + '" text-anchor="middle" font-size="' + tmpFs + '" fill="#cfe2ee" stroke="#0c1c26" stroke-width="2" paint-order="stroke">' + r.temp + '°</text>' +
       (opts.changed && opts.changed.has(r.idx) ? '<circle cx="' + (g.cx + 17) + '" cy="' + (g.cy + 6) + '" r="3.8" fill="#ffd75e" stroke="#7a5b00" stroke-width="1" class="anim-front" style="animation:gatherPulse 1.1s ease-in-out infinite"/>' : '') +
       '</g>';
   }
@@ -2274,7 +2485,8 @@ function renderMapStatic(mr, opts) {
     const color = nc(r.ownerKey);
     const isMine = opts.playerKey != null && r.ownerKey === opts.playerKey;
     if (r.unitsTotal <= 0) continue;
-    s += '<g ' + (isMine ? 'data-unit-idx="' + r.idx + '" style="cursor:grab" ' : '') + 'transform="translate(' + (g.capX + 13) + ' ' + (g.capY - 13) + ')" pointer-events="all">' +
+    const chipSc = labelPaint(LBL_CHIP, mapView.k) / LBL_CHIP * (LBL_CHIP / 8.6);
+    s += '<g ' + (isMine ? 'data-unit-idx="' + r.idx + '" style="cursor:grab" ' : '') + 'transform="translate(' + (g.capX + 13) + ' ' + (g.capY - 13) + ') scale(' + chipSc + ')" pointer-events="all">' +
       '<rect x="-19" y="-8.5" width="38" height="17" rx="8.5" fill="' + color + '" stroke="#0c1c26" stroke-width="1.1" opacity="0.96"/>' +
       '<text text-anchor="middle" y="3.2" font-size="8.6" font-weight="700" fill="#ffffff">⚔' + (r.intelHidden ? r.power + "?" : r.power) + '</text>' +
       (isMine ? '<circle cx="15.5" cy="-6" r="2.4" fill="#ffd75e" stroke="#7a5b00" stroke-width="0.7"/>' : '') + '</g>';
@@ -2287,20 +2499,103 @@ function renderMapStatic(mr, opts) {
     s += '<g transform="translate(0 ' + (i * 44) + ')" data-zoom="' + zb[2] + '" style="cursor:pointer" role="button" aria-label="' + zb[0] + '"><circle r="17" fill="#0c1c26" opacity="0.78"/><text text-anchor="middle" y="6" font-size="17" font-weight="700" fill="#ffffff">' + zb[1] + '</text></g>';
   });
   s += '<g transform="translate(0 88)" data-zoom="reset" style="cursor:pointer" role="button" aria-label="恢复全图"><circle r="17" fill="#0c1c26" opacity="0.78"/><text text-anchor="middle" y="4.6" font-size="11.5" font-weight="700" fill="#ffffff">全</text></g></g>';
-  s += '<g transform="translate(30 58)" opacity="0.9"><circle r="13" fill="#0c1c26" opacity="0.55"/><polygon points="0,-9 3.4,2 0,-0.6 -3.4,2" fill="#ffd75e"/><text y="-17" text-anchor="middle" font-size="10" font-weight="700" fill="#eaf3f9">北</text></g>';
-  s += '<text x="' + (MAP_W - 8) + '" y="' + (MAP_H - 8) + '" text-anchor="end" font-size="8.5" fill="#9fc6de" opacity="0.65">朝鲜半岛战区 · 边界/河流/城市 © Natural Earth</text>';
+  s += '<g transform="translate(30 58)" opacity="0.9"><circle r="13" fill="#0c1c26" opacity="0.55"/><polygon points="0,-9 3.4,2 0,-0.6 -3.4,2" fill="#ffd75e"/><text y="-17" text-anchor="middle" font-size="11" font-weight="700" fill="#eaf3f9">北</text></g>';
+  s += '<text x="' + (MAP_W - 8) + '" y="' + (MAP_H - 8) + '" text-anchor="end" font-size="10" fill="#9fc6de" opacity="0.65">朝鲜半岛战区 · 边界/河流/城市 © Natural Earth</text>';
   return s;
+}
+/* Spray rendering state (APK Spray parity): live particle streams keyed by
+   edge; a vanished stream becomes a 650ms linear fade with zero residue;
+   flips spawn a 750ms double-ring shockwave at the fallen capital. */
+let sprayPrevFlows = {}; // "from>to:owner" -> {from,to,ownerKey,sprayRate}
+let sprayFading = [];    // {from,to,ownerKey,sprayRate,t0}
+let shockAnims = [];     // {idx,t0}
+let sprayRaf = 0;
+function sprayParticlesSVG(a, b, color, sprayRate, now, alphaScale, countScale) {
+  const full = sprayParticleCount(sprayRate);
+  const cnt = Math.max(0, Math.floor(full * (countScale == null ? 1 : countScale)));
+  if (cnt <= 0) return "";
+  const period = sprayTravelPeriodMs(sprayRate);
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len = Math.max(0.001, Math.hypot(dx, dy));
+  let out = "";
+  for (let i = 0; i < cnt; i++) {
+    let t = (i / full) + (now % period) / period;
+    t = t - Math.floor(t);
+    const lane = (i % 3) - 1;
+    const off = Math.sin(t * Math.PI) * lane * 3.2;
+    const px = a.x + dx * t + (-dy / len) * off;
+    const py = a.y + dy * t + (dx / len) * off;
+    out += '<circle cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="' + (1.9 + (i % 3) * 0.4) + '" fill="' + color + '" opacity="' + (0.92 * (alphaScale == null ? 1 : alphaScale)).toFixed(2) + '"/>';
+  }
+  return out;
+}
+function ensureSprayLoop() {
+  if (REDUCED || sprayRaf) return;
+  const active = () => (FLOWV.flows && FLOWV.flows.length) || sprayFading.length || shockAnims.length;
+  if (!active()) return;
+  const step = () => {
+    sprayRaf = 0;
+    if (!active()) return;
+    renderMapDynOnly();
+    sprayRaf = requestAnimationFrame(step);
+  };
+  sprayRaf = requestAnimationFrame(step);
+}
+function startShockFx(idx) {
+  shockAnims.push({ idx: idx, t0: performance.now() });
+  renderMapDynOnly();
+  ensureSprayLoop();
 }
 function renderMapDyn(mr, opts) {
   const nc = opts.nationColor;
+  const nowMs = performance.now();
   let s = '<g class="view-g" transform="translate(' + mapView.tx + ' ' + mapView.ty + ') scale(' + mapView.k + ')">';
-  // fluid territory: live pour streams + draining control bars
-  if (opts.flows && opts.flows.length) {
+  /* Spray streams: thin guide line + particle jet (density/speed from the
+     stream's own sprayRate) + double impact ripples at the target capital.
+     Diff against the previous frame spawns 650ms fades for dead streams. */
+  {
+    const cur = {};
+    for (const f of (opts.flows || [])) cur[f.from + ">" + f.to + ":" + f.ownerKey] = f;
+    for (const key of Object.keys(sprayPrevFlows)) {
+      if (!cur[key]) {
+        const p = sprayPrevFlows[key];
+        sprayFading.push({ from: p.from, to: p.to, ownerKey: p.ownerKey, sprayRate: p.sprayRate || 0, t0: nowMs });
+      }
+    }
+    sprayPrevFlows = {};
+    for (const key of Object.keys(cur)) {
+      const f = cur[key];
+      sprayPrevFlows[key] = { from: f.from, to: f.to, ownerKey: f.ownerKey, sprayRate: f.sprayRate || 0 };
+    }
+    sprayFading = sprayFading.filter((fd) => nowMs - fd.t0 < 650);
+    shockAnims = shockAnims.filter((sh) => nowMs - sh.t0 < 750);
     s += '<g pointer-events="none">';
-    for (const f of opts.flows) {
+    for (const f of (opts.flows || [])) {
       const a = capPt(f.from), b = capPt(f.to);
-      s += '<path class="flow-line" d="M ' + a.x + ' ' + a.y + ' L ' + b.x + ' ' + b.y + '" fill="none" stroke="' + nc(f.ownerKey) + '" stroke-width="3" opacity="0.85" stroke-linecap="round"/>' +
-        '<circle cx="' + b.x + '" cy="' + b.y + '" r="5" fill="' + nc(f.ownerKey) + '" opacity="0.9"/>';
+      const col = nc(f.ownerKey);
+      const rate = f.sprayRate || 0;
+      s += '<path d="M ' + a.x + ' ' + a.y + ' L ' + b.x + ' ' + b.y + '" fill="none" stroke="' + col + '" stroke-width="1.6" opacity="0.45" stroke-linecap="round" stroke-dasharray="9 7"/>';
+      s += sprayParticlesSVG(a, b, col, rate, REDUCED ? 0 : nowMs, 1, 1);
+      for (let ring = 0; ring < 2; ring++) {
+        let ph = ((nowMs % 1000) / 1000 + ring * 0.5) % 1;
+        if (REDUCED) ph = ring * 0.5;
+        s += '<circle cx="' + b.x + '" cy="' + b.y + '" r="' + (4 + ph * 17).toFixed(1) + '" fill="none" stroke="' + col + '" stroke-width="1.8" opacity="' + ((1 - ph) * 0.66).toFixed(2) + '"/>';
+      }
+    }
+    for (const fd of sprayFading) {
+      const age = nowMs - fd.t0;
+      const fadeA = Math.max(0, 1 - age / 650);
+      const a = capPt(fd.from), b = capPt(fd.to);
+      s += sprayParticlesSVG(a, b, nc(fd.ownerKey), fd.sprayRate, REDUCED ? 0 : nowMs, fadeA, fadeA);
+    }
+    for (const sh of shockAnims) {
+      const c = capPt(sh.idx);
+      const raw = Math.min(1, (nowMs - sh.t0) / 750);
+      for (const off of [0, 0.32]) {
+        const p2 = Math.max(0, Math.min(1, (raw - off) / (1 - off || 1)));
+        if (p2 <= 0) continue;
+        s += '<circle cx="' + c.x + '" cy="' + c.y + '" r="' + (6 + p2 * 58).toFixed(1) + '" fill="none" stroke="#ff9500" stroke-width="2.6" opacity="' + ((1 - p2) * 0.82).toFixed(2) + '"/>';
+      }
     }
     s += '</g>';
   }
@@ -2308,13 +2603,16 @@ function renderMapDyn(mr, opts) {
     s += '<g pointer-events="none">';
     for (const r of mr) {
       const c = opts.controlOf(r.idx);
-      if (c >= 99.5) continue;
+      const pr = (opts.pressure || {})[r.idx] || {};
+      const prTop = Object.entries(pr).sort((a, b) => b[1] - a[1])[0];
+      if (c >= 99.5 && !prTop) continue;
       const p = capPt(r.idx);
       const wpx = 38;
       s += '<g transform="translate(' + (p.x - wpx / 2) + ' ' + (p.y + 13) + ')">' +
         '<rect width="' + wpx + '" height="5" rx="2.5" fill="#00000099"/>' +
         '<rect width="' + (wpx * Math.max(0, Math.min(100, c)) / 100) + '" height="5" rx="2.5" fill="' + nc(r.ownerKey) + '"/>' +
-        '<text x="' + (wpx / 2) + '" y="-2.5" font-size="8.5" font-weight="700" text-anchor="middle" fill="#fff" stroke="#0c1c26" stroke-width="2.4" paint-order="stroke">' + Math.round(c) + '%</text></g>';
+        (prTop ? '<rect y="6.5" width="' + wpx + '" height="4" rx="2" fill="#00000099"/><rect y="6.5" width="' + (wpx * Math.max(0, Math.min(100, prTop[1])) / 100) + '" height="4" rx="2" fill="' + nc(prTop[0]) + '"/>' : '') +
+        '<text x="' + (wpx / 2) + '" y="-2.5" font-size="' + labelPaint(LBL_CTRL, mapView.k) + '" font-weight="700" text-anchor="middle" fill="#fff" stroke="#0c1c26" stroke-width="2.4" paint-order="stroke">' + Math.round(c) + '%</text></g>';
     }
     s += '</g>';
   }
@@ -2343,8 +2641,8 @@ function renderMapDyn(mr, opts) {
         '<rect width="' + (66 * (1 - clashT * (ev.captured ? 0.45 : 0.8))) + '" height="6.5" rx="3.2" fill="' + nc(ev.attackerKey) + '"/>' +
         '<rect y="10" width="66" height="6.5" rx="3.2" fill="#00000088"/>' +
         '<rect y="10" width="' + (66 * (1 - clashT * (ev.captured ? 1 : 0.35))) + '" height="6.5" rx="3.2" fill="' + nc(ev.defenderKey) + '"/>' +
-        '<text x="0" y="-3.5" font-size="8" fill="#fff" stroke="#0c1c26" stroke-width="2" paint-order="stroke">' + ev.atkPower + '</text>' +
-        '<text x="66" y="24" font-size="8" fill="#fff" text-anchor="end" stroke="#0c1c26" stroke-width="2" paint-order="stroke">' + ev.defPower + '</text></g>';
+        '<text x="0" y="-3.5" font-size="' + labelPaint(LBL_CTRL, mapView.k) + '" fill="#fff" stroke="#0c1c26" stroke-width="2" paint-order="stroke">' + ev.atkPower + '</text>' +
+        '<text x="66" y="24" font-size="' + labelPaint(LBL_CTRL, mapView.k) + '" fill="#fff" text-anchor="end" stroke="#0c1c26" stroke-width="2" paint-order="stroke">' + ev.defPower + '</text></g>';
     }
     if (battle.phase === "sweep") {
       s += '<g clip-path="url(#rclip-' + ev.toIdx + ')"><circle cx="' + sweepOrigin.x + '" cy="' + sweepOrigin.y + '" r="' + sweepR + '" fill="' + nc(ev.attackerKey) + '" opacity="0.55"/></g>';
@@ -2427,13 +2725,14 @@ function nationColorOf(key) {
   const opt = catalog().nationOptions.find((x) => x.key === key);
   return opt ? opt.color : "#8e8e93";
 }
-let FLOWV = { control: {}, flows: [] };
+let FLOWV = { control: {}, flows: [], pressure: {} };
 function mapOpts() {
   return { nationColor: nationColorOf, playerKey: S ? S.playerKey : null,
     adjacency: S && S.phase !== "setup" ? S.catalog.adjacency : GEO_REGIONS.map(() => []),
     selected: UI.selected, sourceIdx: UI.sourceIdx, highlight: UI.highlight,
     changed: changedSet, battle: battleAnim,
-    flows: FLOWV.flows, controlOf: (idx) => (FLOWV.control[idx] != null ? FLOWV.control[idx] : 100) };
+    flows: FLOWV.flows, pressure: FLOWV.pressure || {},
+    controlOf: (idx) => (FLOWV.control[idx] != null ? FLOWV.control[idx] : 100) };
 }
 function currentMapRegions() {
   if (!S) return SETUP_REGIONS;
@@ -2452,7 +2751,10 @@ function sameMapKey(a, b) {
     a.s === b.s && a.src === b.src && a.h === b.h && a.p === b.p && a.pk === b.pk;
 }
 function renderMapIfChanged() { if (!sameMapKey(lastMapKey, mapKeyNow())) renderMap(); }
+let lastLabelK = 1;
+function rescaleLabelsIfNeeded() { if (Math.abs(mapView.k - lastLabelK) > 0.01) renderMap(); }
 function renderMap() {
+  lastLabelK = mapView.k;
   lastMapKey = mapKeyNow();
   hoverSaved = null; // static layer is rebuilt; hover is baked in fresh
   const mr = currentMapRegions();
@@ -2668,17 +2970,16 @@ function breakdownRow(label, atk, def) {
 }
 function effectiveFromCalc() {
   if (!S || UI.selected == null) return { def: null, pref: null, eff: null };
-  const adj = S.catalog.adjacency[UI.selected] || [];
   let def = null;
   const selR = S.regions[UI.selected];
-  if (selR && selR.ownerKey !== S.playerKey) {
-    const mine = adj.map((i) => S.regions[i]).filter((r) => r && r.ownerKey === S.playerKey).sort((a, b) => b.power - a.power);
+  if (selR && selR.ownerKey !== S.playerKey && world) {
+    const mine = S.regions.filter((r) => r && r.ownerKey === S.playerKey && flowEdge(world, S.playerKey, r.idx, UI.selected)).sort((a, b) => b.power - a.power);
     def = mine.length ? mine[0].idx : null;
   }
   let pref = null;
-  if (UI.sourceIdx != null && adj.includes(UI.sourceIdx)) {
+  if (UI.sourceIdx != null && world) {
     const src = S.regions[UI.sourceIdx];
-    if (src && src.ownerKey === S.playerKey) pref = UI.sourceIdx;
+    if (src && src.ownerKey === S.playerKey && flowEdge(world, S.playerKey, UI.sourceIdx, UI.selected)) pref = UI.sourceIdx;
   }
   return { def: def, pref: pref, eff: UI.attackFrom != null ? UI.attackFrom : (pref != null ? pref : def) };
 }
@@ -2687,8 +2988,12 @@ function regionSheetHTML(region) {
   const owner = S.nations.find((n) => n.key === region.ownerKey);
   const player = S.nations.find((n) => n.isPlayer);
   const isMine = region.ownerKey === S.playerKey;
-  const adjacentMine = (S.catalog.adjacency[region.idx] || []).map((i) => S.regions[i])
-    .filter((r) => r && r.ownerKey === S.playerKey).sort((a, b) => b.power - a.power);
+  /* Reachable own sources: adjacent frontline provinces PLUS any own
+     province whose relay path through own territory reaches this target
+     (flowEdge) — same rule the drag-spray and the engine use. */
+  const adjacentMine = S.regions.filter((r) => r && r.ownerKey === S.playerKey && world && flowEdge(world, S.playerKey, r.idx, region.idx))
+    .sort((a, b) => b.power - a.power);
+  const prEntries = Object.entries(region.pressure || {});
   const truce = !isMine ? ((S.diplomacy.find((d) => d.aiKey === region.ownerKey) || {}).truce || false) : false;
   const eff = effectiveFromCalc().eff;
   const crossing = eff != null ? crossingOf(eff, region.idx) : null;
@@ -2696,43 +3001,55 @@ function regionSheetHTML(region) {
   let h = "";
   h += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div>' +
     '<p class="meta-line"><span style="font-weight:600;color:' + (owner ? owner.color : "") + '">' + esc(owner ? owner.name : "") + '</span>' +
-    '<span class="dim"> · ' + esc(region.typeName) + ' · ' + esc(TERRAIN_NAMES[region.terrain] || region.terrain) + ' · 驻军战力 ' + fmt(region.power) + (region.intelHidden ? "（估算）" : "") + '</span>' +
+    '<span class="dim"> · ' + esc(region.typeName) + ' · ' + esc(TERRAIN_NAMES[region.terrain] || region.terrain) + ' · 兵力 ' + fmt(region.power) + (region.intelHidden ? "（估算）" : "") + '</span>' +
     (region.isCore ? '<span class="core-badge">核心区</span>' : "") + '</p></div>' +
     '<div class="weather-chip"><div><p class="wname">' + esc(region.weatherName) + ' ' + region.temp + '°</p><p class="weff">' + esc(region.weatherEffect) + '</p></div></div></div>';
-  h += '<p class="forecast-box"><b>天气走势</b> · ' + esc(region.forecast.summary) +
-    (isMine ? " · 这是你的省份：在下面建设、生产，部队会直接出现在地图上。" : "") +
-    (!isMine && crossing === "sea" ? " · 与出发地之间是海运航线：跨海登陆战力 -20%。" : "") +
-    (!isMine && crossing === "river" ? " · 与出发地之间隔着大江：渡江作战战力 -12%。" : "") + '</p>';
+  h += '<p class="forecast-box"><b>天气</b> · ' + esc(region.forecast.summary) +
+    (!isMine && crossing === "sea" ? " · 跨海打过去，战力 −20%。" : "") +
+    (!isMine && crossing === "river" ? " · 隔着大江，战力 −12%。" : "") + '</p>';
+  if (prEntries.length) {
+    h += '<p class="forecast-box" style="background:#fff4e0"><b>冲击波压力</b> · ' + prEntries.map(([k, v]) => {
+      const nn = S.nations.find((n) => n.key === k);
+      return (nn ? nn.name : k) + " 已推进 " + Math.round(v) + "%（邻省陷落种下的压力，该方开流后会加速冲刷）";
+    }).join("；") + '</p>';
+  }
   if (region.intelHidden) {
-    h += '<p class="fog-note">敌方区域：驻军构成不明，只能估算战力。用地图右侧的「卫星情报」干预看清，或在进攻预案里看侦察结果。</p>';
+    h += '<p class="fog-note">驻军不明，只能估算。用右侧「谍」看清。</p>';
   } else {
-    const uParts = Object.entries(region.units).map(([k, v]) => (unitsCatalog[k] ? unitsCatalog[k].name : k) + "×" + v).join("、");
-    h += '<p class="body-line"><span class="dim">驻军：</span>' + (uParts || "无") + '</p>';
-    const bParts = Object.entries(region.buildings).filter(([, v]) => v > 0).map(([k, v]) => (buildingsCatalog[k] ? buildingsCatalog[k].name : k) + " " + v + "级").join("、");
-    h += '<p class="body-line" style="margin-top:4px"><span class="dim">建筑（' + region.buildingLevels + '/7）：</span>' + (bParts || "无") + '</p>';
+    const uChips = Object.entries(region.units).filter(([, v]) => v > 0).map(([k, v]) => '<span class="u-chip">' + esc(unitsCatalog[k] ? unitsCatalog[k].name : k) + ' ×' + v + '</span>').join("");
+    h += '<div class="chip-row"><span class="chip-lab">驻军</span>' + (uChips || '<span class="dim">无</span>') + '</div>';
+    const bIcons = catalog.buildingKeys.map((k) => {
+      const lv = region.buildings[k] || 0, def = buildingsCatalog[k];
+      if (!def) return "";
+      return '<span class="bicon' + (lv > 0 ? " on" : "") + '" title="' + esc(def.name) + (lv > 0 ? " " + lv + " 级" : "（未建）") + '">' + (BUILD_GLYPH[k] || "?") + (lv > 0 ? "<i>" + lv + "</i>" : "") + '</span>';
+    }).join("");
+    h += '<div class="chip-row"><span class="chip-lab">建筑</span><span class="bicons">' + bIcons + '</span><span class="dim">' + region.buildingLevels + '/7</span></div>';
   }
   if (isMine && S.phase === "playing") {
-    h += '<h3 class="sec-title">建设（城市在地图上长大）</h3><div class="grid2">';
-    for (const k of catalog.buildingKeys) {
-      const def = buildingsCatalog[k];
-      if (!def) continue;
-      const lvl = region.buildings[k] || 0;
-      const cost = Math.round(def.cost * (1 + 0.7 * lvl));
-      const full = lvl >= 3 || region.buildingLevels >= 7;
-      const blocker = full ? "已满级 / 建筑位已满"
-        : player.money < cost ? "资金不足，还差 " + fmt(cost - Math.floor(player.money))
-        : player.industry < def.industryCost ? "工业不足，需要 " + def.industryCost + "（现 " + fmt(Math.floor(player.industry)) + "）"
-        : null;
-      h += '<button type="button" class="opt-btn" data-act="build" data-building="' + k + '"' + (blocker ? " disabled" : "") + '>' +
-        '<span class="t">' + def.name + ' <span class="lv">' + lvl + ' 级</span></span>' +
-        '<span class="d">' + (blocker || (fmt(cost) + " 资金" + (def.industryCost ? " + " + def.industryCost + " 工业" : "") + " · " + def.desc)) + '</span></button>';
+    h += '<h3 class="sec-title">建设</h3>';
+    for (const grp of BUILD_GROUPS) {
+      h += '<p class="grp-lab">' + grp[0] + '</p><div class="grid2">';
+      for (const k of grp[1]) {
+        const def = buildingsCatalog[k];
+        if (!def) continue;
+        const lvl = region.buildings[k] || 0;
+        const cost = Math.round(def.cost * (1 + 0.7 * lvl));
+        const full = lvl >= 3 || region.buildingLevels >= 7;
+        const blocker = full ? "已满级 / 建筑位已满"
+          : player.money < cost ? "钱不够，还差 " + fmt(cost - Math.floor(player.money))
+          : player.industry < def.industryCost ? "工业不够，需要 " + def.industryCost + "（现 " + fmt(Math.floor(player.industry)) + "）"
+          : null;
+        h += '<button type="button" class="opt-btn" data-act="build" data-building="' + k + '"' + (blocker ? " disabled" : "") + '>' +
+          '<span class="t"><span class="opt-ic">' + (BUILD_GLYPH[k] || "?") + '</span>' + def.name + ' <span class="lv">' + lvl + ' 级</span></span>' +
+          '<span class="d">' + (blocker || (def.desc + " · " + fmt(cost) + " 钱" + (def.industryCost ? " + " + def.industryCost + " 工业" : ""))) + '</span></button>';
+      }
+      h += '</div>';
     }
-    h += '</div>';
     segs["produceCount"] = segs["produceCount"] || {};
     segs["produceCount"].ariaLabel = "生产数量";
     segs["produceCount"].onChange = (k) => { UI.produceCount = Number(k); renderUI(); };
     h += '<div style="margin:16px 0 6px;display:flex;align-items:center;justify-content:space-between;gap:12px">' +
-      '<h3 style="margin:0;font-size:14px;font-weight:700">生产部队（部署到本地图）</h3>' +
+      '<h3 style="margin:0;font-size:14px;font-weight:700">造兵</h3>' +
       '<div style="width:132px;flex-shrink:0">' + segHTML("produceCount", [1, 3, 5].map((n) => ({ key: String(n), label: "×" + n })), String(UI.produceCount), false) + '</div></div>';
     h += '<div class="grid2">';
     for (const k of catalog.unitKeys) {
@@ -2747,23 +3064,23 @@ function regionSheetHTML(region) {
         : player.supplyUsed + supplyNeed > player.supplyCap ? "补给不足：这批需 " + supplyNeed + "，只剩 " + Math.max(0, player.supplyCap - player.supplyUsed)
         : null;
       h += '<button type="button" class="opt-btn" data-act="produce" data-unit="' + k + '"' + (blocker ? " disabled" : "") + '>' +
-        '<span class="t">' + def.name + '</span>' +
-        '<span class="d">' + (blocker || (fmt(def.money * UI.produceCount) + " 资金 · " + fmt(def.industry * UI.produceCount) + " 工业 · 补给 " + supplyNeed + " · " + def.desc)) + '</span></button>';
+        '<span class="t"><span class="opt-ic">' + (UNIT_GLYPH[k] || "?") + '</span>' + def.name + '</span>' +
+        '<span class="d">' + (blocker || (def.desc + " · " + fmt(def.money * UI.produceCount) + " 钱 · " + fmt(def.industry * UI.produceCount) + " 工业 · 补给 " + supplyNeed)) + '</span></button>';
     }
     const myFlows = (S.flows || []).filter((f) => f.ownerKey === S.playerKey && f.from === region.idx);
     for (const f of myFlows) {
       const tgt = S.regions[f.to];
-      h += '<div style="margin-top:14px"><p class="commit-line">正在泼向「' + esc(tgt ? tgt.name : "") + "」：对方控制度 " + (tgt ? tgt.control : "?") + '%</p>' +
-        '<button type="button" class="attack-btn" data-act="flow-stop" data-from="' + region.idx + '" style="background:#ff9500">收兵 · 停下这股兵力</button></div>';
+      h += '<div style="margin-top:14px"><p class="commit-line">正在泼向「' + esc(tgt ? tgt.name : "") + "」：对方控制度 " + (tgt ? tgt.control : "?") + '%' + (f.rl ? " · 经 " + f.rl + " 省接力" : "") + '</p>' +
+        '<button type="button" class="attack-btn" data-act="flow-stop" data-from="' + region.idx + '" data-to="' + f.to + '" style="background:#ff9500">收兵 · 停下这股兵力</button></div>';
     }
-    h += '</div><p class="hint-line">出击方式：点相邻的敌方省份看流速预案，或把本地图的 <b>⚔ 部队标记直接拖到敌方省份</b>上——兵力会像水一样持续泼过去，控制度冲满才易主；拖向别处即改向，随时可收兵。</p>';
+    h += '</div><p class="hint-line">把 <b>⚔ 标记拖到敌省</b>就开喷，拖回出发省收兵；一个省最多同时喷 3 股。</p>';
   }
   if (!isMine && S.phase === "playing") {
     h += '<div style="margin-top:16px">';
     if (truce) {
       h += '<p class="truce-note">与' + esc(owner ? owner.name : "") + '停战中（至少锁定 3 个季度），停战到期前双方都不能进攻对方。</p>';
     } else if (adjacentMine.length === 0) {
-      h += '<p style="font-size:14px;line-height:1.6" class="dim">与我方省份不接壤，打不到——先占领与它接壤的省份，把前线推到它边境上。</p>';
+      h += '<p style="font-size:14px;line-height:1.6" class="dim">没有己方省份能经己方领土接力到它边上，打不到——先占领中间的省份，把前线推过去。</p>';
     } else {
       h += '<h3 style="margin:0;font-size:14px;font-weight:700">泼兵预案（流速全透明）</h3>';
       if (adjacentMine.length > 1) {
@@ -2775,7 +3092,7 @@ function regionSheetHTML(region) {
       }
       const preview = eff != null ? actPreviewAttack(eff, region.idx, "main") : null;
       const flowP = eff != null ? actFlowPreview(eff, region.idx) : null;
-      const activeFlow = eff != null ? (S.flows || []).find((f) => f.from === eff && f.to === region.idx && f.ownerKey === S.playerKey) : null;
+      const activeFlow = (flowP && flowP.ok) ? (S.flows || []).find((f) => f.from === flowP.edgeFrom && f.to === flowP.edgeTo && f.ownerKey === S.playerKey) : null;
       if (preview && preview.ok && preview.atkUnits) {
         const parts = Object.entries(preview.atkUnits).filter(([, v]) => v > 0).map(([k, v]) => (unitsCatalog[k] ? unitsCatalog[k].name : k) + "×" + v).join("、");
         h += '<p class="commit-line">将泼出（驻军 70%）：' + (parts || "无部队") + '（战力 ' + fmt(preview.atkTotal) + '）</p>';
@@ -2791,7 +3108,7 @@ function regionSheetHTML(region) {
           '</div>' +
           '<div class="wx-box' + (preview.weatherPct < 0 ? " bad" : "") + '"><p class="t">目标区天气：' + esc(region.weatherName) + ' ' + region.temp + '° · 进攻天气影响 ' + (preview.weatherPct > 0 ? "+" + preview.weatherPct + "%" : preview.weatherPct + "%") + '</p>' +
           '<p>' + esc(preview.weatherNote) + '</p><p class="fc">预报 · ' + esc(preview.forecast) + '</p></div></div>';
-      } else {
+      } else if (!(flowP && flowP.ok)) {
         h += '<p style="margin-top:12px;font-size:14px" class="dim">选择出发省份后显示流速预览。</p>';
       }
       if (flowP && flowP.ok) {
@@ -2800,10 +3117,14 @@ function regionSheetHTML(region) {
           : flowP.net > 2 ? "流速占优：照这个流速约 " + flowP.etaSec + " 秒冲满（守方疲劳后还会加速）。"
           : flowP.net > 0 ? "缓慢占优：能磨下来，约 " + flowP.etaSec + " 秒起步，守方疲劳后加速；注意出发地也会力竭。"
           : "流速不足：这样泼冲不动——先给出发地增兵、换个更强的出发地，或等坏天气过去。";
+        const edgeNote = flowP.edgeFrom != null && (flowP.edgeFrom !== eff || flowP.edgeTo !== region.idx)
+          ? '<p style="margin:6px 0 0;font-size:12px;line-height:1.6" class="dim">实际前线边：「' + esc((S.regions[flowP.edgeFrom] || {}).name || "") + "」→「" + esc((S.regions[flowP.edgeTo] || {}).name || "") + "」——兵力先沿己方领土接力到前线再泼出。</p>" : "";
+        const partsNote = (flowP.parts && flowP.parts.length)
+          ? '<p style="margin:6px 0 0;font-size:12px;line-height:1.6" class="dim">' + flowP.parts.map((pp) => "· " + esc(pp)).join("<br>") + '</p>' : "";
         h += '<div class="breakdown" style="margin-top:10px"><div class="b-head"><span style="color:' + player.color + '">冲刷 ' + f1(flowP.push) + '%/秒</span><span class="mid">控制度 ' + flowP.control + '%</span><span style="color:' + (owner ? owner.color : "") + '">回补 ' + f1(flowP.regen) + '%/秒</span></div>' +
-          '<p class="verdict ' + (flowP.net > 0 ? "good" : "bad") + '" style="margin-top:6px">净流速 ' + (flowP.net > 0 ? "+" : "") + f1(flowP.net) + '%/秒 · ' + esc(verdict) + '</p></div>';
+          '<p class="verdict ' + (flowP.net > 0 ? "good" : "bad") + '" style="margin-top:6px">净流速 ' + (flowP.net > 0 ? "+" : "") + f1(flowP.net) + '%/秒 · ' + esc(verdict) + '</p>' + edgeNote + partsNote + '</div>';
         if (activeFlow) {
-          h += '<button type="button" class="attack-btn" data-act="flow-stop" data-from="' + eff + '" style="background:#ff9500">收兵 · 停下这股兵力</button>';
+          h += '<button type="button" class="attack-btn" data-act="flow-stop" data-from="' + activeFlow.from + '" data-to="' + activeFlow.to + '" style="background:#ff9500">收兵 · 停下这股兵力</button>';
         } else {
           h += '<button type="button" class="attack-btn" data-act="flow-start" data-from="' + eff + '" data-to="' + region.idx + '">泼兵进攻 · 兵力像水一样灌过去</button>';
         }
@@ -2852,7 +3173,7 @@ function growthSheetHTML() {
   h += '<section class="growth-sec" aria-label="四国对比"><h3>军力 · 经济 · 科技对比</h3><div style="margin-top:8px">';
   const sorted = S.nations.slice().sort((a, b) => nationScoreOf(b) - nationScoreOf(a));
   for (const n of sorted) {
-    h += '<div class="cmp-row"><p class="cmp-name"><span class="dot" style="background-color:' + n.color + '"></span>' + esc(n.name) + (n.isPlayer ? "（你）" : "") +
+    h += '<div class="cmp-row"><p class="cmp-name"><span class="dot" style="background-color:' + n.color + '"></span>' + esc(n.name) + (n.isPlayer ? '<span class="me-badge">我</span>' : "") +
       '<span class="sub">' + n.regionCount + ' 省 · 国力 ' + fmt(nationScoreOf(n)) + (n.eliminated ? " · 已灭亡" : "") + '</span></p>';
     const bars = [["军", "#ff9500", n.armyPower / maxArmy, fmt(n.armyPower)], ["钱", "#34c759", n.money / maxMoney, fmt(n.money)], ["科", "#007aff", n.techLevel / maxTech, n.techLevel + " 级"]];
     for (const b of bars) {
@@ -2861,6 +3182,36 @@ function growthSheetHTML() {
     h += '</div>';
   }
   h += '</div></section>';
+  // research card: big level number + clamped progress bar + one short
+  // line; numbers always self-consistent (bar never exceeds 100%, and
+  // "points >= cost" reads as ready-to-upgrade, never as overflow).
+  const rcCost = Math.max(1, S.researchCost || researchCost(player));
+  const tpNow = Math.floor(player.techPoints);
+  const rcPct = Math.min(100, Math.round((tpNow / rcCost) * 100));
+  h += '<section class="growth-sec" aria-label="科研"><div class="tier-flex"><div><p class="lab">科技等级</p><p class="big">' + player.techLevel + ' 级</p></div>' +
+    '<div style="text-align:right"><p class="lab">科技点</p><p class="big">' + fmt(tpNow) + ' / ' + fmt(rcCost) + '</p></div></div>' +
+    '<div class="tier-bar"><div style="width:' + rcPct + '%"></div></div>' +
+    (tpNow >= rcCost
+      ? '<p class="tier-note">够了，点按钮升到 ' + (player.techLevel + 1) + ' 级。</p><button type="button" class="research-btn" data-act="research"' + (S.phase !== "playing" ? " disabled" : "") + '>升到 ' + (player.techLevel + 1) + ' 级 · 花 ' + fmt(rcCost) + ' 点</button>'
+      : '<p class="tier-note">还差 ' + fmt(rcCost - tpNow) + ' 点。选「科技」方略攒得最快。</p>') + '</section>';
+  // my provinces as cards: big name + garrison + building icon blocks
+  // (lit only when built, with level count) + real build/produce buttons
+  // that open the province sheet.
+  h += '<section class="growth-sec" aria-label="我的省份"><h3>我的省份</h3>';
+  const mineRegions = S.regions.filter((r) => r.ownerKey === S.playerKey);
+  for (const r of mineRegions) {
+    const uTot = Object.values(r.units || {}).reduce((a, b) => a + b, 0);
+    const bIcons = S.catalog.buildingKeys.map((k) => {
+      const lv = (r.buildings || {})[k] || 0, def = S.catalog.buildings[k];
+      if (!def) return "";
+      return '<span class="bicon' + (lv > 0 ? " on" : "") + '" title="' + esc(def.name) + (lv > 0 ? " " + lv + " 级" : "（未建）") + '">' + (BUILD_GLYPH[k] || "?") + (lv > 0 ? "<i>" + lv + "</i>" : "") + '</span>';
+    }).join("");
+    h += '<div class="prov-card"><div><p class="prov-name">' + esc(r.name) + (r.isCore ? ' <span class="core-badge">核心</span>' : "") + '</p>' +
+      '<p class="prov-sub">⚔ ' + uTot + ' 支部队 · 兵力 ' + fmt(r.power) + '</p><span class="bicons">' + bIcons + '</span></div>' +
+      '<div class="prov-btns"><button type="button" class="b1" data-act="open-region" data-idx="' + r.idx + '">建设</button>' +
+      '<button type="button" data-act="open-region" data-idx="' + r.idx + '">生产</button></div></div>';
+  }
+  h += '</section>';
   return h;
 }
 function situationSheetHTML() {
@@ -2877,12 +3228,18 @@ function situationSheetHTML() {
     h += '</div>';
   }
   h += '<div style="margin-bottom:12px">';
+  const meN = S.nations.find((x) => x.isPlayer);
+  if (meN) {
+    h += '<div class="diplo-row me-row"><div><p class="nm"><span class="dot" style="background-color:' + meN.color + '"></span>' + esc(meN.name) +
+      '<span class="me-badge">我</span></p>' +
+      '<p class="sub">' + meN.regionCount + ' 省 · 兵 ' + fmt(meN.armyPower) + ' · 钱 ' + fmt(meN.money) + ' · 科技 ' + meN.techLevel + ' 级</p></div></div>';
+  }
   for (const n of S.nations.filter((x) => !x.isPlayer)) {
     const d = S.diplomacy.find((x) => x.aiKey === n.key);
     const truce = d ? d.truce : false;
     h += '<div class="diplo-row"><div><p class="nm"><span class="dot" style="background-color:' + n.color + '"></span>' + esc(n.name) +
       (n.eliminated ? '<span class="gone">已灭亡</span>' : "") + '</p>' +
-      '<p class="sub">' + esc(n.personalityName) + ' · ' + n.regionCount + ' 省 · 军力 ' + fmt(n.armyPower) + ' · 国库 ' + fmt(n.money) + ' · 科技 ' + n.techLevel + ' 级 · ' + (n.eliminated ? "已出局" : truce ? "停战中" : "交战中") + '</p></div></div>';
+      '<p class="sub">' + esc(n.personalityName) + ' · ' + n.regionCount + ' 省 · 兵 ' + fmt(n.armyPower) + ' · 钱 ' + fmt(n.money) + ' · 科技 ' + n.techLevel + ' 级 · ' + (n.eliminated ? "已出局" : truce ? "停战中" : "交战中") + '</p></div></div>';
   }
   h += '</div>';
   const logs = S.logs.slice(0, UI.logCount);
@@ -2924,7 +3281,7 @@ function renderSetup() {
     '<div class="scrim top-scrim"></div>' +
     '<div class="hud-col"><div class="hud-inner"><div class="setup-title hud-dark"><h1>养一个现代国家</h1><p>朝鲜半岛真实地图 · 选一个国家，看着它自己赚钱、扩军、打仗</p></div></div></div>' +
     '<div class="sheetwrap"><section class="sheet setup-sheet" aria-label="选择国家">' +
-    '<p class="setup-intro">玩法一句话：<b>选国 → 时间自己流淌 → 把兵力像水一样泼向邻省，控制度冲满就易主 → 没空时定个方略让它自己长。</b>四个虚构国家落在真实省份上：边界、城市、河流、山脉都是真的，地形与天气真影响流速。</p>' +
+    '<p class="setup-intro">选一个国家，时间自己流淌；把兵像水一样泼向邻省，冲满就易主。没空管时，定个方略让它自己长。</p>' +
     cards +
     '<p class="setup-foot">28 个真实省份、四国同时自动发展。统一全图获胜，丢光省份落败；关掉页面国家也按方略继续长，回来有离线汇总（按离开时长折算，每 20 分钟一季、最多 24 季；存档保存在这台设备的浏览器里）。</p>' +
     '</section></div>';
@@ -2945,23 +3302,27 @@ function renderMain() {
   h += '<div class="scrim top-scrim"></div>';
   h += '<div class="hud-col"><div class="hud-inner"><div class="hud-row">' +
     '<div class="name-chip hud-dark"><p class="name-line"><span class="dot" style="background-color:' + (player ? player.color : "") + '"></span>' + esc(player ? player.name : "") +
-    '<span class="tier-badge">' + esc(S.playerTier) + '</span><span class="q-line">第 ' + S.quarter + ' 季度 · ' + seasonName + ' · 领土 ' + (player ? player.regionCount : 0) + '/' + totalRegions + '</span></p></div>' +
+    '<span class="me-badge">我</span><span class="tier-badge">' + esc(S.playerTier) + '</span><span class="q-line">第 ' + S.quarter + ' 季度 · ' + seasonName + ' · 领土 ' + (player ? player.regionCount : 0) + '/' + totalRegions + '</span></p></div>' +
     (battleAnim ? '<button type="button" class="skip-btn hud-dark" data-act="skip">跳过动画 »</button>' : "") +
     '</div>';
   if (player) {
     h += '<div class="resbar hud-glass">' +
-      '<div class="res-cell"><p class="res-label">国库资金</p><p class="res-value" id="resMoney">' + fmt(animNums.resMoney ? animNums.resMoney.disp : player.money) + '</p>' +
+      '<div class="res-cell"><p class="res-label">钱</p><p class="res-value" id="resMoney">' + fmt(animNums.resMoney ? animNums.resMoney.disp : player.money) + '</p>' +
       '<p class="res-sub ' + (netMoney >= 0 ? "good" : "bad") + '">' + (netMoney >= 0 ? "▲" : "▼") + ' ' + fmt(Math.abs(netMoney)) + '/季</p></div>' +
       '<div class="res-div"></div>' +
       '<div class="res-cell"><p class="res-label">工业</p><p class="res-value" id="resIndustry">' + fmt(animNums.resIndustry ? animNums.resIndustry.disp : player.industry) + '</p>' +
       '<p class="res-sub">+' + fmt(income ? income.industry : 0) + '/季</p></div>' +
       '<div class="res-div"></div>' +
-      '<div class="res-cell"><p class="res-label">人口 · 补给</p><p class="res-value">' + fmt(player.population) + '</p>' +
+      '<div class="res-cell"><p class="res-label">人</p><p class="res-value">' + fmt(player.population) + '</p>' +
       '<p class="res-sub">补给 ' + player.supplyUsed + '/' + player.supplyCap + '</p></div>' +
       '<div class="res-right"><p class="res-label">科技 ' + player.techLevel + ' 级 · ' + fmt(player.techPoints) + ' 点</p>' +
       '<button type="button" class="research-btn" data-act="research" aria-label="投入科研升级科技等级"' +
       ((player.techPoints < S.researchCost || S.phase !== "playing") ? " disabled" : "") + '>' + fmt(S.researchCost) + ' 点升 ' + (player.techLevel + 1) + ' 级</button></div>' +
       '</div>';
+    // persistent four-nation legend: color block + name (+ 我 for the player)
+    const legendNations = S.nations.slice().sort((a, b) => (b.isPlayer ? 1 : 0) - (a.isPlayer ? 1 : 0));
+    h += '<div class="legend-row hud-glass">' + legendNations.map((n) =>
+      '<span class="legend-chip"><span class="lsw" style="background-color:' + n.color + '"></span>' + esc(n.name) + (n.isPlayer ? '<span class="me-badge" style="margin-left:2px">我</span>' : "") + (n.eliminated ? ' <span class="dim">已灭</span>' : "") + '</span>').join("") + '</div>';
   }
   h += '</div></div>';
   // intervention rail
@@ -2994,7 +3355,7 @@ function renderMain() {
   const showGuideCard = UI.showGuide && !hasCaptured && S.quarter <= 12 && UI.tab === "map" && UI.selected == null;
   if (showGuideCard && guide) {
     h += '<div class="guide-card hud-dark"><button type="button" class="guide-close" data-act="guide-close" aria-label="关闭新手提示">✕</button>' +
-      '<h4>怎么打第一仗</h4><p>时间在流淌（可暂停/加速）。点你的省份看建设与生产；把地图上的 <b>⚔ 部队标记拖到敌方省份</b>上，兵力就像水一样持续泼过去，控制度冲到 0 就易主，随时能改向或收兵。最弱的邻居是「' + esc(guide.region.name) + '」（守军' + (guide.region.intelHidden ? "约 " : "") + fmt(guide.region.power) + '）。</p>' +
+      '<h4>打第一仗</h4><p>点你的省能建设、造兵；把 <b>⚔ 标记拖到敌省</b>上，兵会持续泼过去。最弱的邻居：「' + esc(guide.region.name) + '」（兵力' + (guide.region.intelHidden ? "约 " : "") + fmt(guide.region.power) + '）。</p>' +
       '<button type="button" class="guide-btn" data-act="guide-target" data-from="' + guide.from.idx + '" data-to="' + guide.region.idx + '">瞄准「' + esc(guide.region.name) + '」</button></div>';
   }
   // control bar
@@ -3136,8 +3497,9 @@ function setState(newState, opts) {
     }
   }
   prevRegions = S.regions;
-  FLOWV = { control: {}, flows: S.flows || [] };
-  for (const r of S.regions) FLOWV.control[r.idx] = r.control != null ? r.control : 100;
+  FLOWV = { control: {}, flows: S.flows || [], pressure: {} };
+  for (const r of S.regions) { FLOWV.control[r.idx] = r.control != null ? r.control : 100; if (r.pressure && Object.keys(r.pressure).length) FLOWV.pressure[r.idx] = r.pressure; }
+  ensureSprayLoop();
   if (!playing) displayRegions = S.regions.map(toMapView);
   // offline report (one-shot)
   if (S.offlineReport && !offlineSeen) { offlineSeen = true; UI.offlineReport = S.offlineReport; }
@@ -3198,13 +3560,17 @@ function clientFlowTick() {
   if (!res || !res.ok) return;
   if (res.flowView) FLOWV = res.flowView;
   if (res.flips && res.flips.length && res.state) {
+    for (const fl of res.flips) startShockFx(fl.idx);
     setState(res.state, { silentReport: true });
     const mine = res.flips.find((f) => f.newOwner === S.playerKey);
     const lost = res.flips.find((f) => f.oldOwner === S.playerKey);
+    const shockedMine = res.flips.find((f) => (f.shock || []).some((idx) => { const rr = res.state.regions[idx]; return rr && rr.ownerKey === S.playerKey; }));
     if (mine) setToast("「" + mine.name + "」已被冲满，易主到你手里了");
     else if (lost) setToast("「" + lost.name + "」被冲垮，丢了");
+    else if (shockedMine) setToast("💥 冲击波压过边境：我方邻省控制度 -" + Math.round(shockedMine.shockDrop || 0) + "%");
   } else {
     renderMapDynOnly();
+    ensureSprayLoop();
   }
 }
 function syncClock() {
@@ -3348,8 +3714,8 @@ function segFollowApply(id, st, key) {
       world.strategy = key;
       persist();
       S = buildState(null);
-      FLOWV = { control: {}, flows: S.flows || [] };
-      for (const r of S.regions) FLOWV.control[r.idx] = r.control != null ? r.control : 100;
+      FLOWV = { control: {}, flows: S.flows || [], pressure: {} };
+      for (const r of S.regions) { FLOWV.control[r.idx] = r.control != null ? r.control : 100; if (r.pressure && Object.keys(r.pressure).length) FLOWV.pressure[r.idx] = r.pressure; }
       if (!playing) displayRegions = S.regions.map(toMapView);
       prevRegions = S.regions;
     }
@@ -3376,21 +3742,93 @@ function handleMapSelect(idx) {
   if (region && region.ownerKey === S.playerKey) UI.sourceIdx = idx;
   renderUI();
 }
-function handleUnitDrop(fromIdx, toIdx) {
-  const target = S.regions[toIdx];
-  if (!target) return;
-  if (target.ownerKey === S.playerKey) { setToast("那是自己的地盘——把部队拖到相邻的敌方省份上泼兵"); return; }
-  if (!(S.catalog.adjacency[toIdx] || []).includes(fromIdx)) {
-    setToast("「" + target.name + "」与出发地不接壤，先打通中间的省份");
-    UI.selected = toIdx;
-    renderUI();
+/* ===== Spray drag (APK v1.6 MainActivity parity) =====
+   While dragging a unit, hovering a province sprays AT ONCE (no waiting
+   for release): hover change opens / redirects the drag's stream; hovering
+   back over the origin (or off-map) withdraws it. Formal pre-existing
+   streams are never touched by hovering. Release reconciles: same edge =
+   the sprayed stream stands; different landing = drag stream withdrawn
+   and the formal open/toggle rules run for the landing province. */
+let dragSprayEdge = null; // [edgeFrom, edgeTo] opened by the current drag
+let sprayHoverIdx = null;
+function syncWorldToUI() {
+  if (!world) return;
+  S = buildState(null);
+  FLOWV = flowViewOf(world);
+  if (!playing) displayRegions = S.regions.map(toMapView);
+  prevRegions = S.regions;
+  renderMap();
+}
+function onSprayHover(fromIdx, targetIdx) {
+  if (!world || !S || S.phase !== "playing") return;
+  const cur = dragSprayEdge;
+  if (targetIdx == null || targetIdx === fromIdx) {
+    if (cur) { cancelFlowEdge(world, world.playerKey, cur[0], cur[1]); dragSprayEdge = null; persist(); FLOWV = flowViewOf(world); renderMapDynOnly(); ensureSprayLoop(); }
     return;
   }
-  // Drop = release = execute: the pour starts now and keeps flowing.
+  const edge = flowEdge(world, world.playerKey, fromIdx, targetIdx);
+  if (!edge) return; // unreachable hover: keep whatever is spraying (APK rule)
+  if (cur && cur[0] === edge[0] && cur[1] === edge[1]) return;
+  if (cur) cancelFlowEdge(world, world.playerKey, cur[0], cur[1]);
+  dragSprayEdge = null;
+  const alreadyFormal = world.flows.some((f) => f.ownerKey === world.playerKey && f.from === edge[0] && f.to === edge[1]);
+  if (!alreadyFormal && startFlowInternal(world, world.playerKey, fromIdx, targetIdx)) dragSprayEdge = edge;
+  persist();
+  FLOWV = flowViewOf(world);
+  renderMapDynOnly();
+  ensureSprayLoop();
+}
+function onSprayCancel() {
+  if (dragSprayEdge && world) {
+    cancelFlowEdge(world, world.playerKey, dragSprayEdge[0], dragSprayEdge[1]);
+    persist();
+    FLOWV = flowViewOf(world);
+  }
+  dragSprayEdge = null;
+  sprayHoverIdx = null;
+}
+function handleUnitDrop(fromIdx, toIdx) {
+  const target = S.regions[toIdx];
+  if (!target || !world) { dragSprayEdge = null; return; }
+  const edge = target.ownerKey === S.playerKey ? null : flowEdge(world, world.playerKey, fromIdx, toIdx);
+  const sprayed = dragSprayEdge; dragSprayEdge = null; sprayHoverIdx = null;
   UI.tab = "map";
   UI.sourceIdx = fromIdx;
   UI.attackFrom = fromIdx;
   UI.selected = null;
+  if (sprayed && edge && sprayed[0] === edge[0] && sprayed[1] === edge[1]) {
+    // Same edge on release: the drag spray stands as the formal stream.
+    const f = world.flows.find((x) => x.ownerKey === world.playerKey && x.from === edge[0] && x.to === edge[1]);
+    if (f) {
+      const r = flowRatesLive(world, f);
+      const f1 = (v) => (Math.round(v * 10) / 10).toFixed(1);
+      persist();
+      syncWorldToUI();
+      renderUI();
+      setToast("🌊 喷洒推进中：「" + world.regions[f.from].name + "」→「" + world.regions[f.to].name + "」（净流速 " + (r.net > 0 ? "+" : "") + f1(r.net) + "%/秒）");
+      return;
+    }
+  }
+  if (sprayed) { cancelFlowEdge(world, world.playerKey, sprayed[0], sprayed[1]); persist(); }
+  if (target.ownerKey === S.playerKey) {
+    syncWorldToUI(); renderUI();
+    setToast("那是自己的地盘——把部队拖向敌方省份，悬停到哪就朝哪喷");
+    return;
+  }
+  if (!edge) {
+    syncWorldToUI(); renderUI();
+    setToast("「" + target.name + "」没有可达的前线边，先打通中间的省份");
+    UI.selected = toIdx;
+    renderUI();
+    return;
+  }
+  const existing = world.flows.find((x) => x.ownerKey === world.playerKey && x.from === edge[0] && x.to === edge[1]);
+  if (existing) {
+    // Dropping onto the edge that is already flowing = withdraw (toggle).
+    doAction(() => actStopFlow(edge[0], edge[1]), { silentReport: true });
+    setToast("已收兵：「" + world.regions[edge[0]].name + "」→「" + world.regions[edge[1]].name + "」的兵力流停了");
+    return;
+  }
   doAction(() => actStartFlow(fromIdx, toIdx), { silentReport: true });
   if (S && S.phase === "playing") setToast("兵力已泼向「" + target.name + "」，控制度 " + target.control + "% 正在被冲刷");
 }
@@ -3508,8 +3946,10 @@ document.addEventListener("click", (e) => {
   }
   else if (act === "flow-stop") {
     const from = Number(el.getAttribute("data-from"));
+    const toAttr = el.getAttribute("data-to");
+    const to = toAttr == null ? null : Number(toAttr);
     if (isNaN(from)) return;
-    doAction(() => actStopFlow(from), { silentReport: true });
+    doAction(() => actStopFlow(from, to), { silentReport: true });
     setToast("已收兵");
   }
   else if (act === "iv") {
@@ -3529,6 +3969,14 @@ document.addEventListener("click", (e) => {
     UI.sourceIdx = Number(el.getAttribute("data-from"));
     UI.selected = Number(el.getAttribute("data-to"));
     UI.attackFrom = null;
+    renderUI();
+  }
+  else if (act === "open-region") {
+    // growth-page province card buttons: open that province's sheet on
+    // the map tab (the sheet carries both build and produce sections)
+    UI.selected = Number(el.getAttribute("data-idx"));
+    UI.sourceIdx = null; UI.attackFrom = null;
+    UI.tab = "map";
     renderUI();
   }
   else if (act === "offer") {
@@ -3900,7 +4348,7 @@ document.addEventListener("click", (e) => {
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 2) {
       // Second finger: pinch takes over; any unit drag / pan / tap dies here.
-      if (mapDrag) { mapDrag = null; renderMapDynOnly(); }
+      if (mapDrag) { mapDrag = null; onSprayCancel(); renderMapDynOnly(); }
       pan = null;
       clearTapTimer();
       const pts = Array.from(pointers.values());
@@ -3948,11 +4396,27 @@ document.addEventListener("click", (e) => {
     if (pan.unitFrom != null) {
       if (pan.moved > 7) {
         const wpt = toWorld(e.clientX, e.clientY);
-        if (wpt) { mapDrag = { fromIdx: pan.unitFrom, x: wpt.x, y: wpt.y, active: true }; renderMapDynOnly(); }
+        if (wpt) {
+          mapDrag = { fromIdx: pan.unitFrom, x: wpt.x, y: wpt.y, active: true };
+          renderMapDynOnly();
+          /* Spray follow: the hovered province (nearest capital, same
+             64-unit rule as the drop) drives live open/redirect/withdraw. */
+          let best = null, bestD = 64;
+          for (const r of currentMapRegions()) {
+            const c = capPt(r.idx);
+            const dd = Math.hypot(c.x - wpt.x, c.y - wpt.y);
+            if (dd < bestD) { bestD = dd; best = r.idx; }
+          }
+          if (best !== sprayHoverIdx) { sprayHoverIdx = best; onSprayHover(pan.unitFrom, best); }
+        }
       }
       return;
     }
-    if (pan.moved > 4) {
+    /* Pan claim frame applies the TOTAL displacement since pointer-down
+       (pan.tx/ty are the down-time view; dx/dy are totals) and there is no
+       dead zone: the map follows from the first move frame — no initial
+       stick, no swallowed threshold distance (APK v1.6 gesture fix). */
+    if (pan.moved > 0) {
       const c = clampView({ k: mapView.k, tx: pan.tx + dx * pan.upp, ty: pan.ty + dy * pan.upp });
       mapView.tx = c.tx; mapView.ty = c.ty;
       requestView();
@@ -3961,7 +4425,7 @@ document.addEventListener("click", (e) => {
   const up = (e) => {
     pointers.delete(e.pointerId);
     if (pinch) {
-      if (pointers.size < 2) pinch = null;
+      if (pointers.size < 2) { pinch = null; rescaleLabelsIfNeeded(); }
       pan = null;
       return; // a pinch never resolves into a tap
     }
@@ -3980,7 +4444,8 @@ document.addEventListener("click", (e) => {
           if (dd < bestD) { bestD = dd; best = r.idx; }
         }
         if (best != null && best !== d.unitFrom) handleUnitDrop(d.unitFrom, best);
-      }
+        else { onSprayCancel(); renderMapDynOnly(); } // landed back home / off-province: drag spray withdrawn, nothing committed
+      } else { onSprayCancel(); }
       return;
     }
     mapDrag = null;
@@ -3997,7 +4462,16 @@ document.addEventListener("click", (e) => {
     }
   };
   document.addEventListener("pointerup", up);
-  document.addEventListener("pointercancel", up);
+  document.addEventListener("pointercancel", (e) => {
+    // System-cancelled drag: the drag's spray stream is withdrawn (APK
+    // onSprayCancel), no drop is resolved, no tap fires.
+    pointers.delete(e.pointerId);
+    if (mapDrag) { mapDrag = null; onSprayCancel(); renderMapDynOnly(); }
+    pan = null;
+    if (pointers.size < 2 && pinch) { pinch = null; rescaleLabelsIfNeeded(); }
+    clearTapTimer();
+  });
+  let wheelRescaleTimer = null;
   document.addEventListener("wheel", (e) => {
     const el = svg();
     if (!el || !el.contains(e.target)) return;
@@ -4007,6 +4481,8 @@ document.addEventListener("click", (e) => {
     // stays under the cursor; magnitude-scaled so trackpads stay smooth.
     const f = Math.min(1.55, Math.max(0.65, Math.exp(-e.deltaY * 0.0018)));
     zoomAtClient(e.clientX, e.clientY, f);
+    if (wheelRescaleTimer) clearTimeout(wheelRescaleTimer);
+    wheelRescaleTimer = setTimeout(() => { wheelRescaleTimer = null; rescaleLabelsIfNeeded(); }, 200);
   }, { passive: false });
   document.addEventListener("dblclick", (e) => {
     const el = svg();
