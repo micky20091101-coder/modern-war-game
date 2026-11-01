@@ -17,7 +17,7 @@
         --fill-2: #f2f2f7;
         --seg-track: rgba(120,120,128,0.12);
         --text: #1c1c1e;
-        --dim: #6e6e73;
+        --dim: #48484a;
         --border: #e3e3e8;
         --accent: #007aff;
         --good: #34c759;
@@ -90,34 +90,26 @@
       @media (prefers-reduced-motion: reduce) { .flow-line { animation: none; } }
       @keyframes gatherPulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
 
-      /* ===== Dock — motion package ch.1 layer accounting (web stack).
-         Bar, bottom→top (§1.2): (1) live backdrop: backdrop-filter
-         blur(26px) saturate(1.8) — the browser composites the REAL page
-         behind the bar, no bitmap layer to skip, so the §1.4 DarkGlass
-         bitmap branch never triggers and no solid ever fills in;
-         (2) double outer shadow 40/16/.16 + 10/3/.08 (dark .55/.40);
-         (3) tint gradient 155° #66/#40/#59FFFFFF (dark capped
-         #33/#22/#28 48484A-family); (4) gloss gradient 115°
-         #59/#0D/#00FFFFFF (dark #14/#08/#00), fixed, never follows the
-         finger; (5) 0.5px border #B3FFFFFF (dark #22) + top 1px
-         highlight ::before #F2FFFFFF (dark #26) inset 8px each side,
-         clipped inside the pill radius + inset bottom dark line
-         rgba(0,0,0,.06). Every alpha is a composite alpha — no solid
-         backing anywhere (red line 15). Palette switches ONLY on
-         prefers-color-scheme (the app appearance), never on content.
-         Pill = EXACTLY 4 layers (§1.3): double shadow (10/3/.10 +
-         3/1/.06) → translucent fill #F2FFFFFF (dark #8C787880 =
-         rgba(120,120,128,.55)) → 0.5px border #B3 (dark #22) → top
-         1px highlight ::after #F2 (dark #4D) inset 4px. No gloss, no
-         own backdrop on the pill. ===== */
+      /* ===== Dock — v1.9 SINGLE-LAYER construction (de-ghosting ruling).
+         The old stack (two stacked gradients on the bar + bordered,
+         double-shadowed, highlighted pill) drew two rims wherever the
+         pill met the bar, which read as a permanent double edge /
+         ghost outline, at rest and mid-drag. Now there is exactly ONE
+         of everything: the bar is a single live backdrop-filter glass
+         (blur 26px, saturate 1.8) with ONE tint fill, ONE border and
+         ONE outer shadow; the pill is ONE fill layer with ONE soft
+         shadow — no border, no highlight of its own; and the whole
+         Dock carries exactly ONE inner highlight line (the bar's
+         ::before). No frozen/captured bitmap layers anywhere: the
+         backdrop is composited live by the browser every frame, so
+         nothing can lag a frame behind the pill and smear. Geometry,
+         drag, stretch and snap motion are unchanged. ===== */
       .dock-glass {
-        background:
-          linear-gradient(115deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.05) 38%, rgba(255,255,255,0) 62%),
-          linear-gradient(155deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.25) 55%, rgba(255,255,255,0.35) 100%);
+        background: linear-gradient(155deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.30) 100%);
         -webkit-backdrop-filter: blur(26px) saturate(1.8);
         backdrop-filter: blur(26px) saturate(1.8);
         border: 0.5px solid rgba(255,255,255,0.70);
-        box-shadow: 0 16px 40px rgba(0,0,0,0.16), 0 3px 10px rgba(0,0,0,0.08), inset 0 -0.5px 0 rgba(0,0,0,0.06);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.16);
         border-radius: 999px;
       }
       /* Highlight geometry fix (user screenshot 03:22): the bar is a
@@ -132,29 +124,18 @@
         background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 16%, rgba(255,255,255,0.95) 84%, rgba(255,255,255,0) 100%); pointer-events: none;
       }
       .dock-pill {
-        background: rgba(255,255,255,0.95);
-        border: 0.5px solid rgba(255,255,255,0.70);
-        box-shadow: 0 3px 10px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
+        background: rgba(255,255,255,0.96);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         border-radius: 999px;
-      }
-      /* Same defect on the pill (inset was 4px on a 53px-tall capsule:
-         the line floated wider than the pill's top curve — the short
-         stray line in the screenshot). Inset 20px + faded ends. */
-      .dock-pill::after {
-        content: ""; position: absolute; top: 1px; left: 20px; right: 20px; height: 1px; border-radius: 999px;
-        background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 22%, rgba(255,255,255,0.95) 78%, rgba(255,255,255,0) 100%); pointer-events: none;
       }
       @media (prefers-color-scheme: dark) {
         .dock-glass {
-          background:
-            linear-gradient(115deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 38%, rgba(255,255,255,0) 62%),
-            linear-gradient(155deg, rgba(72,72,74,0.20) 0%, rgba(44,44,46,0.13) 55%, rgba(58,58,60,0.16) 100%);
+          background: linear-gradient(155deg, rgba(72,72,74,0.24) 0%, rgba(44,44,46,0.18) 100%);
           border-color: rgba(255,255,255,0.13);
-          box-shadow: 0 16px 40px rgba(0,0,0,0.55), 0 3px 10px rgba(0,0,0,0.40), inset 0 -0.5px 0 rgba(0,0,0,0.06);
+          box-shadow: 0 12px 32px rgba(0,0,0,0.55);
         }
         .dock-glass::before { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 16%, rgba(255,255,255,0.15) 84%, rgba(255,255,255,0) 100%); }
-        .dock-pill { background: rgba(120,120,128,0.55); border-color: rgba(255,255,255,0.13); }
-        .dock-pill::after { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.30) 22%, rgba(255,255,255,0.30) 78%, rgba(255,255,255,0) 100%); }
+        .dock-pill { background: rgba(120,120,128,0.55); box-shadow: 0 2px 8px rgba(0,0,0,0.30); }
       }
       /* identity + card helpers (readability pass) */
       .me-badge { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #ffd75e; color: #4a3500; font-size: 11px; font-weight: 800; vertical-align: 2px; }
@@ -165,9 +146,9 @@
       .chip-lab { font-size: 12px; color: var(--dim); font-weight: 700; }
       .u-chip { background: var(--fill); border-radius: 8px; padding: 2px 8px; font-size: 12.5px; font-weight: 600; }
       .bicons { display: inline-flex; gap: 4px; vertical-align: middle; }
-      .bicon { position: relative; width: 24px; height: 24px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: var(--fill); color: var(--dim); opacity: 0.4; }
+      .bicon { position: relative; width: 24px; height: 24px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; background: var(--fill); color: #3a3a3c; opacity: 0.62; }
       .bicon.on { opacity: 1; background: rgba(0,122,255,0.16); color: var(--text); }
-      .bicon i { position: absolute; top: -5px; right: -5px; background: #ff9500; color: #fff; border-radius: 999px; font-size: 10px; font-style: normal; padding: 0 4px; font-weight: 800; line-height: 1.5; }
+      .bicon i { position: absolute; top: -5px; right: -5px; background: #9a5200; color: #fff; border-radius: 999px; font-size: 10px; font-style: normal; padding: 0 4px; font-weight: 800; line-height: 1.5; }
       .grp-lab { font-size: 12px; font-weight: 700; color: var(--dim); margin: 10px 0 6px; }
       .opt-ic { display: inline-flex; width: 22px; height: 22px; border-radius: 6px; background: rgba(0,122,255,0.14); align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-right: 6px; vertical-align: -6px; }
       .prov-card { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 0.5px solid rgba(128,128,128,0.25); }
@@ -220,7 +201,7 @@
       .resbar { margin-top: 8px; display: flex; align-items: center; gap: 8px; border-radius: 16px; padding: 8px 12px; }
       .res-cell { flex: 1; min-width: 0; }
       .res-label { font-size: 11px; line-height: 1; color: var(--dim); margin: 0; }
-      .hud-glass .res-label { color: #6e6e73; }
+      .hud-glass .res-label { color: #48484a; }
       @media (prefers-color-scheme: dark) { .hud-glass .res-label { color: #98989f; } }
       .res-value { font-size: 17px; font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; white-space: nowrap; margin: 0; }
       /* Overview is a 3-column grid of big numbers — a value must NEVER
@@ -231,9 +212,9 @@
       .top-pop .res-right { text-align: left; }
       .top-pop .pop-title, .strat-pop .pop-title { color: rgba(255,255,255,0.88); text-shadow: 0 1px 6px rgba(0,0,0,0.35); }
       .res-sub { font-size: 11px; line-height: 1.3; color: var(--dim); font-variant-numeric: tabular-nums; margin: 0; }
-      .hud-glass .res-sub { color: #6e6e73; }
+      .hud-glass .res-sub { color: #48484a; }
       @media (prefers-color-scheme: dark) { .hud-glass .res-sub { color: #98989f; } }
-      .res-sub.good { color: #34c759; font-weight: 600; }
+      .res-sub.good { color: #1f7a33; font-weight: 600; }
       .res-sub.bad { color: #ff3b30; font-weight: 600; }
       .res-div { width: 1px; height: 36px; background: rgba(28,28,30,0.1); flex-shrink: 0; }
       @media (prefers-color-scheme: dark) { .res-div { background: rgba(255,255,255,0.14); } }
@@ -245,22 +226,22 @@
       .controlbar { position: absolute; inset: auto 0 calc(max(16px, env(safe-area-inset-bottom)) + 77px) 0; z-index: 20; display: flex; justify-content: center; padding: 0 12px; pointer-events: none; }
       .controlbar .panel { width: 100%; max-width: 560px; border-radius: 22px; padding: 10px; pointer-events: auto; }
       .ctl-row { margin-top: 8px; display: flex; gap: 8px; }
-      .advance-btn { height: 48px; flex: 1; border-radius: 999px; background: var(--accent); font-size: 15px; font-weight: 700; color: #fff; }
+      .advance-btn { height: auto; min-height: 52px; flex: 1; border-radius: 999px; background: var(--accent); font-size: 15px; font-weight: 700; color: #fff; padding: 10px 16px; line-height: 1.4; }
       .advance-btn:disabled { opacity: 0.4; }
-      .toggle-btn { height: 48px; border-radius: 999px; padding: 0 16px; font-size: 14px; font-weight: 600; background: rgba(28,28,30,0.08); color: var(--text); }
-      .toggle-btn.on-green { background: #34c759; color: #fff; }
+      .toggle-btn { height: auto; min-height: 52px; border-radius: 999px; padding: 10px 18px; line-height: 1.4; font-size: 14px; font-weight: 600; background: rgba(28,28,30,0.08); color: var(--text); }
+      .toggle-btn.on-green { background: #1f7a33; color: #fff; }
       .toggle-btn.on-red { background: #ff3b30; color: #fff; }
       .hud-glass .toggle-btn { color: #1c1c1e; }
-      @media (prefers-color-scheme: dark) { .hud-glass .toggle-btn { color: #fff; background: rgba(255,255,255,0.12); } .hud-glass .toggle-btn.on-green { background: #34c759; } .hud-glass .toggle-btn.on-red { background: #ff3b30; } }
+      @media (prefers-color-scheme: dark) { .hud-glass .toggle-btn { color: #fff; background: rgba(255,255,255,0.12); } .hud-glass .toggle-btn.on-green { background: #1f7a33; } .hud-glass .toggle-btn.on-red { background: #ff3b30; } }
       .ctl-desc { margin: 6px 4px 0; font-size: 11px; line-height: 1.45; color: var(--dim); }
-      .hud-glass .ctl-desc { color: #6e6e73; }
+      .hud-glass .ctl-desc { color: #48484a; }
       @media (prefers-color-scheme: dark) { .hud-glass .ctl-desc { color: #98989f; } }
 
       /* ===== Map-first chrome (03:17 layout ruling) =====
          Default state = almost pure map. Everything else collapses to
          small glass pieces in the Dock's material family: top capsule,
          a one-row mini bar above the Dock (strategy button + advance +
-         speed pill), zoom buttons live in the SVG, legend folds into
+         speed pill), no on-map zoom buttons (pinch/dbl-tap only), legend folds into
          the capsule's expanded card. Panels pop with OVERSHOOT 340ms
          on geometry only; closing runs the main spring. */
       .capsule { display: inline-flex; align-items: center; border-radius: 999px; padding: 8px 14px; max-width: calc(100vw - 24px); }
@@ -269,22 +250,22 @@
       .top-pop { transform-origin: 50% 0; }
       .minirow { position: absolute; left: 0; right: 0; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 69px); z-index: 20; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 0 12px; pointer-events: none; }
       .minirow > * { pointer-events: auto; }
-      .glass-chip { position: relative; height: 44px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; font-size: 13.5px; font-weight: 700; color: var(--text); white-space: nowrap; }
+      .glass-chip { position: relative; height: auto; min-height: 48px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; line-height: 1.4; font-size: 13.5px; font-weight: 700; color: var(--text); white-space: nowrap; }
       .glass-chip .sub { font-weight: 600; color: var(--accent); }
       .advance-chip { background: var(--accent); color: #fff; box-shadow: 0 8px 22px rgba(0,90,200,0.35); }
       .speed-pill { padding: 0 6px; gap: 2px; }
-      .sp-btn { border-radius: 999px; padding: 5px 9px; font-size: 13px; font-weight: 700; color: var(--dim); line-height: 1; }
+      .sp-btn { border-radius: 999px; padding: 8px 10px; font-size: 13px; font-weight: 700; color: #3a3a3c; line-height: 1.4; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; }
       .sp-btn.on { background: rgba(255,255,255,0.95); color: #1c1c1e; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
-      @media (prefers-color-scheme: dark) { .sp-btn.on { background: rgba(120,120,128,0.55); color: #fff; } }
+      @media (prefers-color-scheme: dark) { .sp-btn { color: #98989f; } .sp-btn.on { background: rgba(120,120,128,0.55); color: #fff; } }
       .sp-btn.flow-on { color: #ff3b30; }
       .strat-pop { position: absolute; left: 12px; right: 12px; margin: 0 auto; width: auto; max-width: 560px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 121px); z-index: 21; border-radius: 22px; padding: 12px; transform-origin: 50% 100%; }
       /* Narrow phones: the three mini-row pieces must fit inside the
          margins — tighter padding/type, never clipped or overlapped. */
       @media (max-width: 430px) {
         .minirow { gap: 6px; padding: 0 8px; }
-        .glass-chip { padding: 0 10px; font-size: 12.5px; gap: 4px; }
-        .speed-pill { padding: 0 4px; }
-        .sp-btn { padding: 5px 6px; font-size: 12.5px; }
+        .glass-chip { padding: 8px 10px; font-size: 12.5px; gap: 4px; }
+        .speed-pill { padding: 4px; }
+        .sp-btn { padding: 7px 7px; font-size: 12.5px; }
       }
       .war-ticker { margin-top: 8px; display: flex; align-items: center; gap: 6px; border-radius: 14px; padding: 6px 8px 6px 12px; width: 100%; }
       .war-ticker .wt-x { margin-left: auto; flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: rgba(128,128,128,0.25); display: flex; align-items: center; justify-content: center; font-size: 12px; color: inherit; }
@@ -294,11 +275,11 @@
       .pop-lab { font-size: 11px; font-weight: 700; color: var(--dim); margin: 10px 2px 5px; }
       .strat-pop .pop-lab:first-child { margin-top: 0; }
       .host-row { display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-      .host-chip { border-radius: 999px; padding: 7px 12px; font-size: 12.5px; font-weight: 700; background: var(--seg-track); color: var(--dim); line-height: 1; }
-      .host-chip.on { background: #34c759; color: #fff; }
-      .hud-glass .host-chip { color: #6e6e73; }
-      .hud-glass .host-chip.on { background: #34c759; color: #fff; }
-      @media (prefers-color-scheme: dark) { .hud-glass .host-chip { color: #98989f; } .hud-glass .host-chip.on { background: #34c759; color: #fff; } }
+      .host-chip { border-radius: 999px; padding: 10px 14px; font-size: 13px; font-weight: 700; background: var(--seg-track); color: var(--dim); line-height: 1.4; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; }
+      .host-chip.on { background: #1f7a33; color: #fff; }
+      .hud-glass .host-chip { color: #3a3a3c; }
+      .hud-glass .host-chip.on { background: #1f7a33; color: #fff; }
+      @media (prefers-color-scheme: dark) { .hud-glass .host-chip { color: #98989f; } .hud-glass .host-chip.on { background: #1f7a33; color: #fff; } }
       .strat-live b { color: var(--text); font-weight: 700; }
       .strat-foot { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
       .guide-chip { position: absolute; left: 12px; bottom: calc(max(16px, env(safe-area-inset-bottom)) + 121px); z-index: 19; border-radius: 999px; padding: 9px 14px; font-size: 13px; font-weight: 700; }
@@ -313,15 +294,18 @@
       .sec-ic { display: inline-flex; width: 22px; height: 22px; border-radius: 7px; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; margin-right: 7px; vertical-align: -6px; }
 
       /* sliding segmented (motion package §2) */
-      .seg { position: relative; height: 40px; border-radius: 999px; background: var(--seg-track); touch-action: none; display: flex; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+      .seg { position: relative; height: auto; min-height: 48px; border-radius: 999px; background: var(--seg-track); touch-action: none; display: flex; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
       .hud-glass .seg { background: rgba(120,120,128,0.12); }
       @media (prefers-color-scheme: dark) { .hud-glass .seg { background: rgba(120,120,128,0.24); } .seg .seg-btn { color: #fff; } }
-      /* segmented pill: EXACTLY 2 layers per package §2.1 — translucent
-         fill (#BFFFFFFF light / #40FFFFFF dark) + 1px edge (#33000000 /
-         #33FFFFFF). No shadow, no highlight (extra layers = ghosting). */
-      .seg-pill { position: absolute; top: 2px; height: 36px; border-radius: 999px; background: rgba(255,255,255,0.75); border: 1px solid rgba(0,0,0,0.20); }
-      @media (prefers-color-scheme: dark) { .seg-pill { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.20); } }
-      .seg-btn { position: relative; z-index: 10; height: 40px; font-size: 13px; font-weight: 600; color: #3a3a3c; }
+      /* segmented pill (v1.9 contrast ruling): the selected slot is a
+         WHITE pill with a soft shadow on the light track, so the
+         selected label (near-black, bold) and the unselected labels
+         (dark gray #3a3a3c on the light-gray track) both stay readable
+         at every drag frame — white-on-light-gray labels are banned
+         app-wide. Dark scheme keeps the light wash + white labels. */
+      .seg-pill { position: absolute; top: 3px; bottom: 3px; height: auto; border-radius: 999px; background: #ffffff; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+      @media (prefers-color-scheme: dark) { .seg-pill { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.20); box-shadow: 0 2px 8px rgba(0,0,0,0.35); } }
+      .seg-btn { position: relative; z-index: 10; height: auto; min-height: 48px; padding: 10px 8px; line-height: 1.4; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 13px; font-weight: 600; color: #3a3a3c; }
       .seg-btn.sel { color: #1c1c1e; font-weight: 700; }
       @media (prefers-color-scheme: dark) { .seg-btn.sel { color: #fff; } }
       .seg.dark { background: rgba(255,255,255,0.12); }
@@ -364,6 +348,7 @@
       @media (min-width: 1024px) {
         .sheetwrap { inset: 0 0 0 auto; width: 430px; justify-content: flex-end; }
         .sheet { max-height: none; height: 100%; max-width: 430px; border-radius: 0; padding-top: 20px; }
+        .sheet.prov-sheet { max-height: 45dvh; height: auto; align-self: flex-end; border-radius: 24px 0 0 0; padding-top: 8px; }
         .setup-sheet { max-width: 430px; }
         .guide-card { bottom: auto; top: 148px; left: 20px; }
         .target-hint { left: 20px; right: auto; width: 360px; bottom: auto; top: 148px; }
@@ -381,7 +366,20 @@
       .sheetwrap { position: absolute; inset: auto 0 0 0; z-index: 40; display: flex; justify-content: center; }
       /* Sheets follow the Apple Health ground: system-gray page with
          big-radius white cards floating on it (cards opt in below). */
-      .sheet { overscroll-behavior: contain; max-height: 52dvh; width: 100%; max-width: 640px; overflow-y: auto; border-radius: 24px 24px 0 0; background: var(--bg); padding: 12px 16px calc(max(16px, env(safe-area-inset-bottom)) + 84px); box-shadow: 0 -12px 40px rgba(4,20,30,0.3); color: var(--text); }
+      .sheet { overscroll-behavior: contain; max-height: 45dvh; width: 100%; max-width: 640px; overflow-y: auto; border-radius: 24px 24px 0 0; background: var(--bg); padding: 12px 16px calc(max(16px, env(safe-area-inset-bottom)) + 84px); box-shadow: 0 -12px 40px rgba(4,20,30,0.3); color: var(--text); }
+      /* Province panel compact pass (v1.9 parity): capped at 45dvh so
+         most of the map stays visible with the panel open; overflow
+         scrolls INSIDE the panel. Control is ONE row — label + bar +
+         percent on the same line. Attack target buttons are compact
+         (roughly half the old height). */
+      .prov-sheet { padding: 8px 14px calc(max(16px, env(safe-area-inset-bottom)) + 84px); }
+      .prov-sheet .sec-title { margin: 10px 0 5px; }
+      .prov-sheet .grp-lab { margin: 7px 0 5px; }
+      .ctrl-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+      .ctrl-lab { font-size: 12.5px; font-weight: 700; color: var(--dim); flex-shrink: 0; line-height: 1; }
+      .ctrl-track { flex: 1; height: 6px; border-radius: 999px; background: var(--fill-2); overflow: hidden; min-width: 0; }
+      .ctrl-track > div { height: 100%; border-radius: 999px; }
+      .ctrl-pct { font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; flex-shrink: 0; line-height: 1; min-width: 40px; text-align: right; }
       .hcard { background: var(--surface); border-radius: 20px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(20,30,40,0.05); }
       .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
       .sheet-head h2 { margin: 0; font-size: 17px; font-weight: 700; }
@@ -389,7 +387,7 @@
 
       /* region sheet bits */
       .meta-line { font-size: 14px; line-height: 1.5; margin: 0; }
-      .core-badge { margin-left: 8px; border-radius: 999px; background: #ff9500; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #fff; vertical-align: middle; }
+      .core-badge { margin-left: 8px; border-radius: 999px; background: #9a5200; padding: 2px 8px; font-size: 11px; font-weight: 700; color: #fff; vertical-align: middle; }
       .weather-chip { display: flex; flex-shrink: 0; align-items: center; gap: 6px; border-radius: 999px; background: #e8f7fa; padding: 6px 10px; }
       @media (prefers-color-scheme: dark) { .weather-chip { background: #12303c; } }
       .weather-chip .wname { font-size: 13px; font-weight: 700; line-height: 1.2; }
@@ -408,7 +406,7 @@
       .opt-btn .t .lv { font-weight: 400; color: var(--dim); }
       .opt-btn .d { display: block; margin-top: 2px; font-size: 11px; line-height: 1.45; color: var(--dim); }
       .hint-line { margin-top: 10px; font-size: 11.5px; line-height: 1.6; color: var(--dim); }
-      .truce-note { border-radius: 12px; background: #eef6ff; padding: 10px 12px; font-size: 14px; color: #007aff; margin: 0; }
+      .truce-note { border-radius: 12px; background: #eef6ff; padding: 10px 12px; font-size: 14px; color: #0055b3; margin: 0; }
       @media (prefers-color-scheme: dark) { .truce-note { background: #0b2a44; color: #0a84ff; } }
       .from-chips { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
       .from-chip { border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 600; background: var(--fill-2); }
@@ -425,13 +423,13 @@
       .brow .l { color: var(--dim); }
       .wx-box { margin-top: 10px; border-radius: 12px; padding: 8px 12px; background: #eef6ff; }
       .wx-box.bad { background: #fff1e5; }
-      @media (prefers-color-scheme: dark) { .wx-box { background: #0b2a44; } .wx-box.bad { background: #3d2410; } }
+      @media (prefers-color-scheme: dark) { .wx-box { background: #0b2a44; } .wx-box.bad { background: #3d2410; } .wx-box .fc { color: #0a84ff; } }
       .wx-box .t { font-size: 13px; font-weight: 700; margin: 0; }
       .wx-box p { margin: 2px 0 0; font-size: 12px; line-height: 1.6; }
-      .wx-box .fc { font-weight: 500; color: var(--accent); }
+      .wx-box .fc { font-weight: 500; color: #0055b3; }
       .verdict { margin-top: 4px; font-size: 14px; font-weight: 700; }
-      .verdict.good { color: #34c759; } .verdict.bad { color: #ff3b30; }
-      .attack-btn { margin-top: 12px; width: 100%; border-radius: 999px; background: #ff3b30; padding: 14px; font-weight: 700; color: #fff; font-size: 15px; white-space: normal; line-height: 1.4; height: auto; }
+      .verdict.good { color: #1f7a33; } .verdict.bad { color: #d92b20; }
+      .attack-btn { margin-top: 8px; width: 100%; border-radius: 12px; background: #d92b20; padding: 11px 12px; font-weight: 700; color: #fff; font-size: 14px; white-space: normal; line-height: 1.45; height: auto; min-height: 44px; }
       .attack-btn:disabled { opacity: 0.4; }
       /* No clipped button labels, ever: sheet buttons wrap their text
          instead of truncating it (the 03:35 screenshot showed action
@@ -446,7 +444,7 @@
       .growth-sec h3 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
       .tier-flex { display: flex; align-items: baseline; justify-content: space-between; }
       .tier-flex .lab { font-size: 13px; color: var(--dim); margin: 0; }
-      .tier-flex .big { font-size: 26px; font-weight: 700; line-height: 1.25; margin: 0; font-variant-numeric: tabular-nums; }
+      .tier-flex .big { font-size: 26px; font-weight: 700; line-height: 1.25; margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
       .tier-bar { margin-top: 8px; height: 8px; overflow: hidden; border-radius: 999px; background: var(--fill-2); }
       .tier-bar > div { height: 100%; border-radius: 999px; background: var(--accent); transition: width 700ms; }
       .tier-note { margin-top: 6px; font-size: 12px; color: var(--dim); }
@@ -466,21 +464,21 @@
       .restart-row { margin-top: 20px; border-top: 1px solid var(--fill-2); padding-top: 12px; }
       .restart-row .ask { display: flex; align-items: center; gap: 12px; font-size: 14px; }
       .restart-row .danger { color: #ff3b30; font-weight: 500; }
-      .restart-row .confirm { border-radius: 999px; background: #ff3b30; padding: 6px 14px; font-size: 14px; font-weight: 600; color: #fff; }
+      .restart-row .confirm { border-radius: 999px; background: #d92b20; padding: 6px 14px; font-size: 14px; font-weight: 600; color: #fff; }
       .restart-link { font-size: 14px; color: var(--dim); text-decoration: underline; }
 
       /* diplo / log */
       .offer-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 16px; background: var(--surface); padding: 10px 14px; margin-bottom: 8px; }
       .offer-row p { margin: 0; font-size: 14px; font-weight: 500; }
       .offer-btns { display: flex; gap: 8px; }
-      .accept-btn { border-radius: 999px; background: #34c759; padding: 6px 16px; font-size: 14px; font-weight: 600; color: #fff; }
-      .decline-btn { border-radius: 999px; background: #ff3b30; padding: 6px 16px; font-size: 14px; font-weight: 600; color: #fff; }
+      .accept-btn { border-radius: 999px; background: #1f7a33; padding: 6px 16px; font-size: 14px; font-weight: 600; color: #fff; }
+      .decline-btn { border-radius: 999px; background: #d92b20; padding: 6px 16px; font-size: 14px; font-weight: 600; color: #fff; }
       .diplo-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 16px; background: var(--surface); padding: 12px 14px; margin-bottom: 8px; }
       .diplo-row .nm { font-size: 15px; font-weight: 600; margin: 0; }
       .diplo-row .sub { margin-top: 2px; font-size: 12px; color: var(--dim); }
       .diplo-row .gone { margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--dim); }
       .truce-btn { flex-shrink: 0; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600; color: #fff; }
-      .truce-btn.make { background: #34c759; } .truce-btn.break { background: #ff3b30; }
+      .truce-btn.make { background: #1f7a33; } .truce-btn.break { background: #d92b20; }
       .diplo-note { padding: 4px 4px 0; font-size: 12px; line-height: 1.6; color: var(--dim); }
       .log-row { display: flex; width: 100%; align-items: flex-start; gap: 8px; border-radius: 12px; padding: 8px; text-align: left; }
       .log-row:hover { background: var(--fill); }
@@ -528,6 +526,54 @@
       .choose-btn:disabled { opacity: 0.5; }
       .setup-foot { padding: 10px 4px 4px; font-size: 11px; line-height: 1.6; color: var(--dim); margin: 0; }
 
+      /* ===== Button-text clipping audit (user 10:57, APK parity) =====
+         Every capsule / segmented / toggle / action button gets room
+         to breathe in BOTH axes: no fixed height paired with a large
+         font, line-height never 1, generous vertical padding, and no
+         overflow clipping of glyphs. Fixed heights become min-heights
+         so a taller line wraps/grows instead of being sliced. */
+      button { line-height: 1.4; }
+      .host-chip { padding: 10px 14px; font-size: 13px; line-height: 1.4; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; overflow: visible; }
+      .host-row { gap: 8px; }
+      .seg { height: auto; min-height: 48px; overflow: visible; }
+      .seg-pill { top: 3px; bottom: 3px; height: auto; }
+      .seg-btn { height: auto; min-height: 48px; padding: 10px 8px; line-height: 1.4; display: flex; align-items: center; justify-content: center; text-align: center; white-space: normal; overflow: visible; }
+      .glass-chip { height: auto; min-height: 48px; padding: 9px 14px; line-height: 1.4; overflow: visible; }
+      .sp-btn { padding: 8px 10px; line-height: 1.4; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; overflow: visible; }
+      .advance-btn { height: auto; min-height: 52px; padding: 10px 16px; line-height: 1.4; display: flex; align-items: center; justify-content: center; white-space: normal; overflow: visible; }
+      .toggle-btn { height: auto; min-height: 52px; padding: 10px 18px; line-height: 1.4; display: inline-flex; align-items: center; justify-content: center; white-space: normal; overflow: visible; }
+      .strat-pop .toggle-btn { height: auto !important; min-height: 40px !important; padding: 9px 14px !important; }
+      .attack-btn { padding: 11px 12px; line-height: 1.45; min-height: 44px; overflow: visible; }
+      .opt-btn { padding: 12px; line-height: 1.45; overflow: visible; }
+      .from-chip { padding: 9px 12px; min-height: 36px; display: inline-flex; align-items: center; line-height: 1.45; overflow: visible; }
+      .prov-btns button { padding: 11px 14px; line-height: 1.4; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; overflow: visible; }
+      .accept-btn, .decline-btn { padding: 10px 16px; line-height: 1.4; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+      .truce-btn { padding: 11px 16px; line-height: 1.4; min-height: 42px; display: inline-flex; align-items: center; justify-content: center; }
+      .choose-btn { padding: 12px; line-height: 1.45; min-height: 48px; }
+      .modal-btn { padding: 14px; line-height: 1.45; min-height: 50px; }
+      .research-btn { padding: 7px 12px; line-height: 1.4; min-height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+      .sanction-pick button { padding: 10px 12px; line-height: 1.45; min-height: 38px; }
+      .guide-btn { padding: 9px 12px; line-height: 1.4; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+      .guide-chip { padding: 11px 14px; line-height: 1.4; min-height: 42px; display: inline-flex; align-items: center; }
+      .log-more { padding: 12px; line-height: 1.4; min-height: 44px; }
+      .restart-row .confirm { padding: 9px 14px; line-height: 1.4; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; }
+      .u-chip { padding: 5px 8px; line-height: 1.4; display: inline-flex; align-items: center; }
+      .skip-btn { padding: 10px 12px; line-height: 1.4; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+      .capsule { padding: 10px 14px; }
+      .name-line { line-height: 1.4; }
+      .ctrl-lab, .ctrl-pct { line-height: 1.35; }
+      .res-label { line-height: 1.3; }
+      .dock-btn .lb { line-height: 1.3; }
+      .tier-badge, .core-badge { padding: 4px 8px; line-height: 1.35; }
+      .tag-rec, .tag-style { padding: 6px 10px; line-height: 1.35; display: inline-flex; align-items: center; }
+      .weather-chip { padding: 8px 10px; }
+      .bicon i { line-height: 1.4; padding: 1px 4px; }
+      @media (max-width: 430px) {
+        .glass-chip { padding: 8px 10px; }
+        .sp-btn { padding: 7px 7px; }
+        .host-chip { padding: 9px 12px; }
+      }
+
       .loading-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #0a283d; }
       .loading-screen p { font-size: 14px; color: #cfe2ee; margin: 0; }
 
@@ -541,14 +587,15 @@
     <div id="app"></div>
     <script>
 "use strict";
-const MAP_W = 620;
-const MAP_H = 790;
-const GEO_REGIONS= [{"id": 0, "iso": "KP-09", "name": "咸镜北道", "en": "Hamgyŏng-bukto", "capital": "清津", "capX": 473, "capY": 122, "cx": 453, "cy": 122, "path": "M484,33L490,36L499,35L500,36L498,39L508,41L510,43L509,52L515,59L523,63L525,67L523,74L510,76L511,83L505,90L505,100L502,102L496,101L493,108L491,106L489,109L490,110L488,115L482,114L479,125L476,124L473,125L471,131L467,133L464,141L464,147L475,153L472,160L468,172L470,183L472,185L469,194L458,193L454,196L441,200L437,205L435,203L432,203L427,213L421,213L419,211L419,208L412,203L412,199L408,194L410,191L408,187L411,180L407,167L410,163L403,155L401,150L408,143L408,141L405,137L398,135L399,132L397,128L398,122L394,121L392,113L396,114L405,105L410,105L411,101L416,100L419,96L423,96L430,91L428,89L432,85L429,84L432,83L432,80L437,78L439,76L441,76L440,74L444,76L447,75L455,80L459,77L459,74L468,75L470,72L470,64L472,62L471,61L474,57L472,55L472,52L479,36L483,35L481,34Z", "type": "industry", "terrain": "mountains", "owner": "amber", "core": true}, {"id": 1, "iso": "KP-13", "name": "罗先市", "en": "Rasŏn", "capital": "罗先", "capX": 519, "capY": 82, "cx": 523, "cy": 80, "path": "M528,62L534,74L539,78L541,84L543,85L536,88L535,85L529,82L526,83L524,84L521,83L519,86L521,89L518,88L518,90L514,94L514,91L513,90L506,94L505,90L511,83L510,76L523,74L526,65L525,64Z", "type": "port", "terrain": "coast", "owner": "amber", "core": false}, {"id": 2, "iso": "KP-10", "name": "两江道", "en": "Ryanggang", "capital": "惠山", "capX": 353, "capY": 152, "cx": 342, "cy": 160, "path": "M393,104L405,105L397,113L392,113L394,121L398,122L397,128L399,132L398,135L405,137L408,141L408,143L401,150L403,155L410,163L407,167L409,173L408,175L395,169L386,169L385,174L380,176L377,180L365,182L367,188L365,198L362,205L354,213L349,215L343,212L336,213L332,219L320,225L318,225L317,221L320,218L321,212L315,211L313,205L302,193L309,187L307,182L313,180L312,172L303,171L301,175L298,177L292,176L292,171L289,168L285,169L279,174L271,173L265,168L256,151L257,148L250,149L248,146L249,143L253,143L259,139L259,130L262,126L265,127L268,131L266,131L267,134L276,138L270,142L272,143L276,143L278,141L284,142L283,144L285,145L303,145L305,147L311,149L313,148L327,149L329,147L334,146L336,148L338,146L339,151L342,150L343,153L346,152L346,153L349,153L361,138L357,132L350,129L345,119L343,118L340,109L358,105L381,107L384,105L390,105Z", "type": "fortress", "terrain": "mountains", "owner": "amber", "core": false}, {"id": 3, "iso": "KP-04", "name": "慈江道", "en": "Chagang-do", "capital": "江界", "capX": 231, "capY": 184, "cx": 223, "cy": 199, "path": "M257,122L258,125L262,126L259,132L260,138L253,143L249,143L249,147L250,149L257,148L256,151L259,158L262,161L262,164L267,171L278,174L285,169L291,169L292,179L287,184L285,188L285,191L291,194L290,198L279,202L275,210L262,215L261,221L256,226L254,233L247,240L231,248L228,253L219,256L201,252L184,239L178,238L172,239L158,231L158,228L154,224L157,217L155,214L151,213L142,206L145,205L147,202L152,202L154,197L157,199L162,198L159,195L168,190L173,191L177,189L181,190L187,189L185,188L190,185L194,181L197,177L196,176L207,170L220,156L222,154L224,154L223,156L226,155L224,149L230,140L229,136L233,132L242,129L238,127L241,127L246,130L248,127Z", "type": "fortress", "terrain": "mountains", "owner": "neutral", "core": false}, {"id": 4, "iso": "KP-03", "name": "平安北道", "en": "P'yŏngan-bukto", "capital": "新义州", "capX": 65, "capY": 248, "cx": 131, "cy": 252, "path": "M142,209L142,207L151,213L155,213L157,217L154,224L158,228L158,231L172,239L178,238L184,239L197,250L214,254L212,258L214,263L194,269L187,266L168,280L149,286L144,286L132,291L126,287L127,286L122,286L123,288L119,287L118,285L114,285L107,280L104,281L100,276L92,274L91,271L91,282L87,282L83,286L81,283L83,278L79,276L77,269L66,268L64,265L59,262L62,260L65,253L72,254L65,253L62,248L78,237L88,232L91,228L95,226L102,220L105,222L113,221L111,218L112,216L130,210L132,207ZM105,285L103,285L105,289L96,293L99,290L98,289L101,284ZM86,290L88,290L87,292ZM86,289L79,289L85,287L87,288ZM79,297L81,295L81,297ZM51,270L52,269L53,270Z", "type": "industry", "terrain": "hills", "owner": "crimson", "core": true}, {"id": 5, "iso": "KP-08", "name": "咸镜南道", "en": "Hamgyŏng-namdo", "capital": "咸兴", "capX": 303, "capY": 261, "cx": 322, "cy": 236, "path": "M426,214L420,220L412,221L404,228L387,232L385,235L388,236L389,240L383,241L371,248L366,248L363,253L358,250L356,251L356,253L350,254L339,252L334,257L331,256L329,263L322,264L323,265L315,267L313,270L310,268L306,270L300,277L301,281L304,282L306,285L302,292L305,304L304,307L302,306L303,302L299,297L295,299L273,299L271,301L269,308L265,310L264,314L257,313L255,308L251,309L248,306L242,307L239,306L242,295L237,290L240,285L240,281L243,277L241,275L245,268L252,265L259,266L262,268L269,266L271,263L267,254L276,245L271,241L271,235L267,232L256,231L256,226L261,221L261,216L268,211L275,210L279,202L290,198L291,194L285,191L285,186L291,181L292,176L300,176L303,171L310,171L313,174L312,181L307,182L309,187L302,193L313,205L315,211L321,212L320,218L317,221L318,225L332,219L336,213L343,212L349,215L354,213L362,205L365,198L367,188L365,182L377,180L380,176L385,174L386,169L395,169L408,175L411,182L408,187L410,191L408,195L412,199L413,204L419,208L420,212Z", "type": "industry", "terrain": "coast", "owner": "amber", "core": false}, {"id": 6, "iso": "KP-07", "name": "江原北道", "en": "Kangwŏn-do", "capital": "元山", "capX": 296, "capY": 318, "cx": 297, "cy": 350, "path": "M366,357L360,360L360,367L357,372L346,379L323,382L319,379L298,381L291,380L274,381L264,384L258,390L253,387L253,379L250,379L246,377L240,368L240,361L238,358L247,353L252,346L253,338L260,336L263,333L264,331L261,324L263,319L267,317L264,314L264,310L269,307L271,300L281,299L295,299L291,301L298,304L292,304L290,312L292,314L297,317L300,315L303,318L308,318L314,321L320,321L330,332L332,332L339,340L345,341L354,349L360,347L366,353Z", "type": "port", "terrain": "mountains", "owner": "neutral", "core": false}, {"id": 7, "iso": "KP-02", "name": "平安南道", "en": "P'yŏngan-namdo", "capital": "平城", "capX": 176, "capY": 310, "cx": 202, "cy": 293, "path": "M158,355L147,349L144,346L141,347L143,349L142,349L136,350L133,349L134,351L131,351L129,349L130,347L129,345L127,344L127,349L124,349L121,344L125,330L131,323L136,323L132,323L132,318L136,317L135,315L136,314L141,313L140,311L144,306L142,306L141,302L145,301L137,300L139,297L136,297L142,289L144,287L168,280L187,266L194,269L214,263L212,258L214,254L219,256L228,253L231,248L247,240L255,231L265,231L270,234L271,241L276,245L267,254L270,265L263,268L257,265L246,267L241,275L243,277L240,281L240,285L237,290L242,295L239,303L240,306L248,306L251,309L255,308L257,313L264,314L267,318L263,319L261,324L257,325L242,319L234,319L230,317L229,320L236,330L231,331L225,329L223,331L224,335L221,336L216,334L212,326L206,323L204,318L193,316L190,312L184,314L178,312L176,317L174,313L164,308L157,312L158,318L161,320L154,325L156,334L154,338L150,341L157,350Z", "type": "farm", "terrain": "plains", "owner": "crimson", "core": false}, {"id": 8, "iso": "KP-01", "name": "平壤市", "en": "P'yŏngyang", "capital": "平壤", "capX": 168, "capY": 326, "cx": 180, "cy": 329, "path": "M165,308L174,313L176,317L178,312L184,314L190,312L193,316L204,318L206,323L212,326L216,334L204,330L196,331L195,336L202,341L203,345L194,351L182,348L180,345L171,341L164,341L154,346L150,341L154,338L156,334L154,325L161,320L158,318L157,312Z", "type": "tech", "terrain": "plains", "owner": "crimson", "core": false}, {"id": 9, "iso": "KP-06", "name": "黄海北道", "en": "Hwanghae-bukto", "capital": "沙里院", "capX": 168, "capY": 366, "cx": 214, "cy": 365, "path": "M258,390L244,405L237,408L236,418L230,420L219,415L217,412L215,395L217,392L219,394L220,393L216,389L205,386L193,390L181,391L174,380L167,380L167,379L164,377L165,375L161,364L160,357L154,346L164,341L171,341L180,345L182,348L186,350L194,351L203,345L202,341L195,336L196,331L204,330L222,336L224,335L223,331L225,329L231,331L236,330L229,320L230,317L234,319L242,319L255,324L261,324L264,331L262,334L253,338L252,346L247,353L238,358L240,361L240,368L246,377L250,379L253,379L253,387Z", "type": "farm", "terrain": "plains", "owner": "crimson", "core": false}, {"id": 10, "iso": "KP-05", "name": "黄海南道", "en": "Hwanghae-namdo", "capital": "海州", "capX": 164, "capY": 400, "cx": 152, "cy": 389, "path": "M217,412L200,415L197,417L198,423L195,422L193,418L191,418L190,413L187,414L183,410L182,411L185,416L180,415L171,407L171,404L156,401L154,403L156,404L162,405L162,407L165,407L163,409L166,409L162,411L158,409L159,414L158,415L159,416L157,418L157,421L154,419L150,420L150,418L146,423L139,424L137,427L138,421L144,420L139,419L140,418L145,416L150,417L150,415L147,414L149,411L142,410L143,411L139,411L144,415L137,413L139,415L134,417L128,416L134,412L130,408L124,413L111,410L111,408L109,409L110,407L115,405L124,406L124,404L119,403L118,401L126,400L129,402L130,398L121,396L111,399L101,394L100,395L95,396L85,394L97,390L99,387L102,387L104,389L110,387L104,386L100,382L101,377L106,370L108,369L108,371L111,366L109,359L113,360L115,361L118,359L120,360L120,354L122,357L124,356L124,354L133,355L138,352L144,353L145,351L149,353L150,355L152,353L160,357L163,372L165,375L164,377L167,379L167,380L174,380L179,386L181,390L193,390L205,386L217,389L220,393L219,394L217,392L215,395ZM101,364L103,367L94,365L98,362ZM135,421L133,423L127,425ZM121,419L121,418L125,417ZM113,415L113,417L110,417Z", "type": "farm", "terrain": "coast", "owner": "neutral", "core": false}, {"id": 11, "iso": "KR-42", "name": "江原道", "en": "Gangwon", "capital": "春川", "capX": 318, "capY": 412, "cx": 364, "cy": 428, "path": "M336,381L346,379L355,374L360,367L360,360L366,357L387,394L408,418L419,427L420,432L422,433L425,440L439,456L443,468L447,473L446,476L450,497L446,506L435,505L436,491L427,489L422,483L422,479L429,478L425,475L419,475L410,473L405,475L405,473L399,470L396,472L396,478L394,477L377,472L370,473L367,469L360,470L358,469L363,464L353,462L341,466L337,461L332,464L332,467L330,469L324,469L324,465L308,468L321,447L321,444L325,440L323,438L303,433L304,427L302,427L304,425L303,419L308,416L310,412L304,407L299,406L296,398L290,399L285,397L286,393L280,395L277,393L276,398L260,388L274,381L291,380L298,381L319,379L323,382Z", "type": "fortress", "terrain": "mountains", "owner": "neutral", "core": false}, {"id": 12, "iso": "KR-28", "name": "仁川广域市", "en": "Incheon", "capital": "仁川", "capX": 240, "capY": 444, "cx": 239, "cy": 443, "path": "M241,449L233,449L235,447L231,445L231,442L235,440L232,441L232,437L239,436L244,440L247,445L245,448ZM229,439L231,441L220,446L214,445L213,443L224,440L225,438Z", "type": "port", "terrain": "coast", "owner": "neutral", "core": false}, {"id": 13, "iso": "KR-11", "name": "首尔市", "en": "Seoul", "capital": "首尔", "capX": 261, "capY": 435, "cx": 262, "cy": 438, "path": "M266,427L270,429L271,437L277,437L273,443L267,446L266,444L256,446L250,442L247,436L248,435L254,435L256,432L260,432Z", "type": "tech", "terrain": "plains", "owner": "neutral", "core": false}, {"id": 14, "iso": "KR-41", "name": "京畿道", "en": "Gyeonggi", "capital": "水原", "capX": 264, "capY": 458, "cx": 275, "cy": 439, "path": "M237,416L237,408L244,405L256,393L260,388L276,398L277,393L280,395L286,393L285,397L290,399L296,398L299,406L304,407L310,412L308,416L303,419L304,425L302,427L304,427L303,433L323,438L325,440L321,444L321,447L308,468L302,476L298,477L291,484L282,486L272,483L266,485L259,484L262,483L262,480L265,478L261,479L260,482L256,483L249,477L255,476L254,470L251,475L244,474L244,469L252,466L252,464L249,466L247,464L240,468L238,467L240,465L237,465L237,464L241,462L238,461L236,458L237,458L245,458L246,461L248,457L252,457L239,453L241,449L245,448L247,445L244,440L239,436L232,437L229,432L227,420L237,421L236,428L244,430L238,427L239,416ZM209,418L212,419L210,421L203,421L205,417ZM213,426L215,428L213,429L208,426L211,422ZM225,433L217,433L214,431L218,429L214,423L215,418L217,417L225,421L227,431ZM90,405L90,407L86,407L88,408L86,409L81,407L82,405ZM194,460L194,458L198,460L195,462ZM223,457L224,458L222,460L219,460L220,457ZM233,458L233,460L227,463L229,460L227,456L230,456ZM163,427L164,428L162,429ZM89,415L88,417L86,418L86,416Z", "type": "industry", "terrain": "plains", "owner": "neutral", "core": false}, {"id": 15, "iso": "KR-43", "name": "忠清北道", "en": "North Chungcheong", "capital": "清州", "capX": 299, "capY": 504, "cx": 324, "cy": 499, "path": "M300,477L308,468L324,465L324,469L330,469L332,467L332,464L337,461L341,466L353,462L363,464L358,469L359,469L367,469L370,473L377,472L388,476L374,484L370,489L372,490L371,493L364,495L356,490L354,494L348,492L345,494L343,494L340,498L343,501L334,500L322,510L330,516L328,519L327,524L328,527L325,530L326,533L338,534L341,539L336,540L336,544L333,550L327,552L325,551L319,553L309,549L306,545L305,538L298,536L298,529L303,522L301,522L299,524L297,519L290,520L289,516L290,511L278,512L279,506L287,498L288,495L282,486L291,484L298,477Z", "type": "industry", "terrain": "hills", "owner": "neutral", "core": false}, {"id": 16, "iso": "KR-44", "name": "忠清南道", "en": "South Chungcheong", "capital": "洪城", "capX": 236, "capY": 507, "cx": 252, "cy": 514, "path": "M217,517L219,521L214,521L215,518L212,519L214,516L211,516L210,508L212,507L215,507L214,509ZM248,548L239,551L234,546L235,545L231,542L226,540L224,542L224,539L227,538L232,539L227,535L230,529L225,527L230,525L226,524L224,520L233,516L224,518L223,515L225,512L222,511L221,507L225,507L226,505L223,503L225,502L222,500L222,498L224,498L223,496L219,498L220,504L218,506L214,505L215,499L212,497L211,500L209,500L212,506L209,508L209,504L207,501L207,498L200,501L198,499L202,499L202,498L198,495L196,499L196,495L199,491L200,493L202,493L201,491L204,491L201,490L202,488L201,486L204,484L204,487L207,487L208,480L210,480L211,486L208,493L213,493L211,489L214,489L217,488L215,486L218,483L213,481L215,479L212,478L213,477L220,477L219,480L223,482L222,487L223,489L226,481L230,485L224,478L230,478L225,476L224,473L234,478L234,484L237,478L244,479L247,481L246,485L249,484L251,493L249,494L251,496L252,490L255,490L252,487L259,484L266,485L272,483L282,486L287,491L287,498L281,503L270,500L268,504L269,515L267,518L279,518L284,525L286,534L296,530L299,524L301,522L303,522L298,529L297,534L298,536L305,538L306,545L309,549L306,552L295,552L295,550L291,549L285,542L283,545L271,547L269,545L270,542L267,541L251,544Z", "type": "farm", "terrain": "coast", "owner": "neutral", "core": false}, {"id": 17, "iso": "KR-30", "name": "大田广域市", "en": "Daejeon", "capital": "大田", "capX": 291, "capY": 525, "cx": 290, "cy": 524, "path": "M286,534L284,525L279,518L289,516L290,520L297,519L299,524L296,530Z", "type": "tech", "terrain": "plains", "owner": "neutral", "core": false}, {"id": 18, "iso": "KR-50", "name": "世宗市", "en": "Sejong", "capital": "世宗", "capX": 284, "capY": 516, "cx": 276, "cy": 511, "path": "M270,500L281,503L278,512L290,511L289,516L274,519L267,518L269,515L268,504Z", "type": "farm", "terrain": "plains", "owner": "neutral", "core": false}, {"id": 19, "iso": "KR-47", "name": "庆尚北道", "en": "North Gyeongsang", "capital": "安东", "capX": 394, "capY": 509, "cx": 392, "cy": 532, "path": "M446,506L448,521L444,526L443,536L447,544L443,548L449,552L456,545L459,550L455,556L452,570L448,578L449,580L435,580L433,576L428,575L422,576L419,578L420,580L413,583L408,582L398,586L385,585L381,582L380,578L376,581L370,582L364,580L355,580L355,573L348,567L336,564L332,561L332,555L329,551L334,548L336,544L336,540L341,539L338,534L326,533L325,530L328,527L327,524L328,519L330,516L322,510L334,500L343,501L340,498L343,494L345,494L348,492L354,494L356,490L364,495L371,493L372,490L370,489L377,482L388,476L396,478L396,472L401,471L405,473L405,475L410,473L428,476L429,478L427,479L422,479L422,483L427,489L436,491L435,505ZM559,437L560,440L558,443L555,443L552,441L552,439Z", "type": "industry", "terrain": "mountains", "owner": "azure", "core": true}, {"id": 20, "iso": "KR-27", "name": "大邱广域市", "en": "Daegu", "capital": "大邱", "capX": 384, "capY": 561, "cx": 386, "cy": 559, "path": "M391,551L395,554L396,559L392,566L384,566L381,568L375,564L375,562L378,561L377,560L379,557L378,554L382,551Z", "type": "industry", "terrain": "hills", "owner": "azure", "core": false}, {"id": 21, "iso": "KR-31", "name": "蔚山广域市", "en": "Ulsan", "capital": "蔚山", "capX": 438, "capY": 585, "cx": 431, "cy": 587, "path": "M449,580L449,587L446,590L443,586L444,590L441,592L442,599L436,602L432,601L430,598L413,588L415,582L420,580L419,578L425,575L433,576L434,579L436,580Z", "type": "industry", "terrain": "coast", "owner": "azure", "core": false}, {"id": 22, "iso": "KR-48", "name": "庆尚南道", "en": "South Gyeongsang", "capital": "昌原", "capX": 390, "capY": 608, "cx": 360, "cy": 600, "path": "M411,615L408,619L406,616L405,619L398,619L398,617L396,619L394,618L391,618L391,615L390,617L385,615L384,609L382,612L386,620L388,621L384,621L382,619L377,618L368,622L366,625L375,622L376,625L370,627L372,628L371,633L374,633L370,637L367,636L370,635L363,634L365,632L364,629L361,632L355,630L354,633L349,633L347,631L342,630L343,619L338,623L340,625L335,627L333,624L332,628L325,629L312,615L309,606L315,595L310,585L316,571L321,566L328,564L332,560L336,564L349,568L355,573L355,580L364,580L370,582L376,581L380,578L383,584L395,586L408,582L415,582L413,588L414,590L419,591L435,602L434,607L429,613L423,606L419,605L415,608L414,612ZM343,639L342,648L336,648L333,643L330,647L328,645L325,635L331,630L334,632L331,635L332,637L335,640ZM395,635L393,637L395,641L390,640L388,643L391,645L383,647L385,646L384,643L382,644L381,641L383,641L384,637L378,640L375,635L382,632L387,633L385,629L391,626L390,625L392,623L393,624L394,630L392,634L395,634ZM344,637L337,637L335,636L340,631L339,635L342,633ZM402,624L401,626L399,621L402,621ZM361,652L356,654L355,652L356,651ZM368,639L371,639L370,643L366,640L366,639L364,639L365,637ZM356,637L358,639L356,640L354,639Z", "type": "industry", "terrain": "coast", "owner": "azure", "core": false}, {"id": 23, "iso": "KR-26", "name": "釜山广域市", "en": "Busan", "capital": "釜山", "capX": 420, "capY": 612, "cx": 419, "cy": 613, "path": "M429,613L423,614L424,618L422,618L419,616L416,621L414,620L414,622L411,622L411,615L414,612L415,608L418,606L423,606Z", "type": "port", "terrain": "coast", "owner": "azure", "core": false}, {"id": 24, "iso": "KR-45", "name": "全罗北道", "en": "North Jeolla", "capital": "全州", "capX": 273, "capY": 564, "cx": 275, "cy": 574, "path": "M219,598L219,594L224,586L235,583L239,586L237,582L225,583L221,581L222,578L232,572L237,567L242,567L246,569L246,567L240,563L247,561L250,559L248,558L242,560L233,559L232,556L226,556L226,553L243,552L252,548L248,548L251,544L267,541L270,542L269,545L271,547L283,545L285,542L291,549L295,550L295,552L306,552L309,549L319,553L329,551L332,555L332,560L328,564L321,566L316,571L310,587L312,587L315,595L309,605L300,601L295,604L272,604L267,594L261,597L253,591L246,593L243,600L231,604L230,603L231,596ZM206,583L206,581L210,580Z", "type": "farm", "terrain": "plains", "owner": "emerald", "core": true}, {"id": 25, "iso": "KR-29", "name": "光州广域市", "en": "Gwangju", "capital": "光州", "capX": 251, "capY": 613, "cx": 256, "cy": 610, "path": "M257,606L261,608L263,611L260,614L251,612L249,608Z", "type": "industry", "terrain": "plains", "owner": "emerald", "core": false}, {"id": 26, "iso": "KR-46", "name": "全罗南道", "en": "South Jeolla", "capital": "务安", "capX": 223, "capY": 626, "cx": 260, "cy": 630, "path": "M323,628L319,628L317,626L316,630L313,632L311,633L308,630L306,630L307,634L311,639L321,636L319,646L312,645L310,648L311,654L305,650L307,644L303,640L302,633L299,637L290,638L295,640L289,643L292,643L293,647L298,650L299,652L297,652L300,653L300,656L289,656L289,658L296,659L287,664L288,666L286,666L279,659L275,660L276,661L272,659L278,652L277,657L281,656L282,653L280,650L283,647L286,651L289,648L287,644L284,646L281,643L277,648L273,648L263,654L262,659L258,663L258,666L254,666L254,668L248,666L248,657L245,656L244,658L244,661L242,661L244,664L240,666L241,667L239,667L234,670L232,677L226,678L226,674L223,673L226,669L222,667L222,663L227,661L225,660L227,658L216,660L212,656L211,657L209,656L210,653L207,652L209,644L213,648L212,650L215,655L221,656L222,655L219,654L218,651L216,652L215,647L220,647L221,650L227,653L227,651L234,653L228,650L225,646L214,644L221,642L227,644L228,640L235,641L237,640L230,638L231,634L229,633L227,634L228,636L225,641L223,641L223,639L215,641L219,633L216,629L219,627L214,628L214,631L210,630L211,629L209,627L213,627L215,624L211,619L209,619L210,620L208,621L206,616L208,615L210,617L212,614L212,618L217,621L219,624L221,618L214,612L214,608L210,608L215,607L213,606L217,598L221,600L219,598L231,596L230,603L231,604L243,600L246,593L252,591L257,593L261,597L267,594L272,604L295,604L300,601L305,602L309,605L311,614L322,625ZM275,664L280,664L281,666L275,668L271,667L271,665ZM215,662L212,669L210,668L209,670L202,673L197,673L198,671L194,669L203,660L207,661L205,657L211,660L213,659ZM322,649L324,653L323,656L318,653L321,650L320,647L323,646ZM185,647L187,648L184,651L180,648L184,645ZM187,642L187,643L182,643L181,646L178,645L180,642ZM190,632L192,631L193,632L192,635L185,635ZM195,622L190,621L191,618L199,615L196,616L197,619ZM286,698L283,695L285,695ZM303,666L300,669L297,664ZM322,662L322,663L321,663L316,660L319,659ZM194,655L194,658L189,660L190,659L189,658L192,656L191,653ZM189,657L188,657L188,652L191,656ZM144,648L141,653L142,648ZM199,645L199,647L195,646L191,642L199,643ZM199,641L197,643L193,641L198,640ZM192,638L191,636L198,635L195,640ZM205,631L203,630L205,630ZM200,622L199,624L196,622ZM120,696L117,694L118,692ZM232,687L233,688L230,688L227,690L225,689L227,686ZM237,688L237,690L235,690L235,685L237,685ZM255,685L256,688L251,688L252,684ZM233,683L231,686L228,685L229,682ZM193,677L191,679L188,677L189,676ZM251,676L244,674L253,674L253,676ZM269,674L265,676L266,674L262,673L264,671ZM244,676L245,678L239,677L239,676L235,674L235,671L240,670ZM244,671L246,668L249,667L252,670L249,670L245,673ZM212,635L214,637L212,638L209,636L204,636L208,634L209,631L212,633L210,634ZM204,622L198,618L204,618L203,620L206,623L205,623Z", "type": "port", "terrain": "coast", "owner": "emerald", "core": false}, {"id": 27, "iso": "KR-49", "name": "济州道", "en": "Jeju", "capital": "济州", "capX": 227, "capY": 736, "cx": 229, "cy": 745, "path": "M258,738L258,741L250,750L232,755L212,756L207,759L199,753L198,751L201,746L210,739L223,735L246,732L254,735L257,739Z", "type": "farm", "terrain": "island", "owner": "emerald", "core": false}];
-const GEO_ADJ = [[1, 2, 5], [0], [0, 3, 5], [2, 4, 5, 7], [3, 7], [0, 2, 3, 6, 7], [5, 7, 9, 11], [3, 4, 5, 6, 8, 9, 10], [7, 9], [6, 7, 8, 10, 14], [7, 9, 14], [6, 14, 15, 19], [13, 14], [12, 14], [9, 10, 11, 12, 13, 15, 16], [11, 14, 16, 17, 18, 19, 24], [14, 15, 17, 18, 24], [15, 16, 18], [15, 16, 17], [11, 15, 20, 21, 22, 24], [19, 22], [19, 22], [19, 20, 21, 23, 24, 26], [22], [15, 16, 19, 22, 26], [26], [22, 24, 25, 27], [26]];
-const GEO_RIVERS = [{"name": "鸭绿江", "pts": "65,266 125,244 186,215 230,184 285,163 353,122 414,104 483,87"}, {"name": "图们江", "pts": "361,111 429,100 483,91 537,84"}, {"name": "大同江", "pts": "230,189 182,233 167,326 141,350 99,363"}, {"name": "汉江", "pts": "318,412 277,431 261,435 239,428 209,424"}, {"name": "洛东江", "pts": "394,509 372,559 385,596 416,616"}, {"name": "锦江", "pts": "331,520 292,526 255,544 238,552"}, {"name": "荣山江", "pts": "258,602 251,624 213,640"}];
-const GEO_MOUNTAINS = [{"name": "太白山脉", "pts": "350,377 380,407 395,444 407,488 426,536 437,577"}, {"name": "小白山脉", "pts": "285,481 312,525 334,570 304,607 289,629"}];
-const GEO_SEA_PAIRS = [[26, 27]];
-const GEO_RIVER_PAIRS = [[10, 14], [11, 14]];
+const MAP_W = 860;
+const MAP_H = 612;
+const GEO_REGIONS= [{"id":0,"name":"北嶺","kana":"ほくれい","capital":"白瀬","capital_kana":"しらせ","capX":586.9,"capY":64.4,"cx":609.9,"cy":61.7,"path":"M637.5,42.6L639.1,42.8L638.3,42.9L635.8,42.4L637.2,42.4L637.5,42.6ZM674.6,57.9L675.8,58.1L671.9,59.4L669.9,62.2L665.4,62.1L662.1,63L661.8,63.8L662.7,64L660.9,64.9L659.5,64.7L659.7,65.8L657.4,66L655.4,64.6L654.2,66L655.1,66.9L654.3,67.1L648.8,66.8L646,65.5L640.4,67L637.3,68.7L631.1,73.5L626.6,79.1L626.3,83.3L624.5,86.9L618.9,83.4L609,80.1L603.2,76.3L601.1,76.1L596.2,73.5L592.6,73.2L588.5,74.2L581.8,77.7L579.5,79.5L578.6,78.9L579.7,78.7L578.5,78.2L574.7,74.2L570,73.9L568.4,74.8L566.5,76.8L565.9,80.3L571,83.3L574.3,82.8L579.4,87.2L582.1,88L583.9,89.4L580.1,91.2L576.5,90L574.2,90.5L574.5,89.2L573.2,88.9L572.1,90.7L569.1,91.8L568.7,94.8L565.6,95.7L564.2,97.3L560.8,96.5L559.7,93.7L561.7,89.4L562.6,89.1L563,85.8L560.6,83.3L558.7,82.7L556.1,80.8L555.5,79.3L556.9,77L556.8,73.7L557.6,72.3L560.8,71.8L564.1,69.3L565.7,70.4L567.6,67.7L570.4,65.7L569.8,63.9L566.8,61.4L567.2,59.1L568.7,59.1L569.8,58.2L575.9,61.7L580.2,61L580.4,62.1L583.3,62.8L586,61.7L588.4,59.3L588.7,57.5L587.1,55.2L587.7,54.1L586.6,51.4L587.9,49.6L590.4,48.9L592.7,46.9L593.3,44.4L593,40.2L594.8,37.3L595.8,32.9L594.9,28.1L591.6,22.6L591.6,20.8L592.8,19.1L592.8,17.1L593.4,17L593.7,17.8L596.3,17.4L598.2,15.6L604.2,19.9L610.5,25.5L614,29.7L619.3,34.1L626.6,38.1L627.7,39.4L635.1,41.9L633.2,42.1L634.1,43.5L638.3,43.8L639.5,43L641.9,43.1L643,43.6L641.6,45.1L642.6,45.3L644.4,43.3L645.1,45L647.1,46.6L654.2,47.4L656,46.9L663.4,41.6L666.2,38.8L666.8,40.8L664.6,44.3L662.3,46.6L660.8,50.2L663.7,53.8L665.6,58.3L667.2,59.5L664.8,58.7L664.5,59.1L666.4,60.3L669.7,61L669.3,60.2L671,58.9L674.6,57.9L674.6,57.9ZM551.1,80.6L551.4,80.8L550.6,82L550.3,83.4L549.1,84.3L548.5,82L548.9,81.3L550.9,80.7L551.1,80.6ZM665.6,53.8L666.6,54.5L665,55.3L664.9,54.9L666,54.3L663.4,53.4L665.1,53.6L665.6,53.8ZM586.4,22.4L586.6,22.7L586.1,23.3L584.9,23.9L582.6,22.5L582.9,22.1L582.6,21.7L583.5,21L584.6,21L585.8,21.7L586.4,22.4ZM581,16.9L581.4,17.4L580.7,20.6L579.8,18.5L580,17.5L579.3,16.6L579.7,16.6L580.1,17.1L580.6,17L581,16.9Z","type":"farm","terrain":"plains","owner":"azure","core":false},{"id":1,"name":"青岬","kana":"あおみさき","capital":"沢港","capital_kana":"さわみなと","capX":574.8,"capY":108.9,"cx":576.6,"cy":108.2,"path":"M559,116.7L559,114.4L558.4,113.5L557.3,113.5L557.3,113.1L558.6,112.3L560.1,110.4L561,109.9L562.5,110.4L565.2,109.4L566,107.8L566.5,104.8L567.4,105.6L567.7,105.6L567.4,104.9L568.2,104.8L566.6,104.5L566.1,103.1L565,102.9L565.2,102.5L566.4,102.3L566.9,100L569.3,101.7L571,100.8L572.7,101.5L572.8,104.5L573.5,107.4L574.1,108.2L576,108.5L577,107.6L577.4,106.4L576.8,106.2L577.2,106.2L577.7,105.1L578.9,105.5L579.6,106.1L579.5,106.5L581.1,107L582.5,107.8L583.6,107.1L584.4,105.6L584.8,103.2L585.5,102.2L585,101.1L584,100L583.2,99.8L582.7,100.4L583.1,100.2L582.9,100.6L581.1,101.7L579.5,101.4L578.9,101.9L577.2,102.1L576.3,102.8L575.3,102.4L576,98.8L576.7,97L578,95.8L578.1,94.6L580,95.6L582.1,96.1L583.8,97.6L585.4,98.3L586.9,98.2L589.2,96.8L587.7,102.1L587.7,106.6L588.4,110.8L589.7,114L590.5,114.6L591.4,114.4L593.5,116.2L591.6,117.1L590.9,118L589.4,117.8L587,118.4L586,118.1L580,121L578.5,120.3L579.2,117.8L579.2,117L578.7,116.6L578.9,116L577.4,115.3L576.4,115.4L574.3,116.7L573,117L571.9,116.7L570.6,117L568.2,115.6L566.1,116.3L561.3,116L559.7,116.6L559,116.7Z","type":"farm","terrain":"mountains","owner":"azure","core":false},{"id":2,"name":"岩峰","kana":"いわみね","capital":"岳沢","capital_kana":"たけざわ","capX":582.9,"capY":131.1,"cx":591.1,"cy":135.5,"path":"M593.5,116.2L594.7,117.6L596.7,120.7L596.1,121.5L597.4,122.4L596.8,122.9L596.7,123.8L598.8,125.2L599,125.9L598.7,126.7L599.3,127.5L600,130.1L599,132.9L599.1,133.2L600.5,132.4L600.4,133.4L601.2,134.1L600.1,135.3L598.9,135.9L599.7,136.2L600.5,135.4L601,135.8L600.5,136.8L598.6,137.4L599.1,137.6L597.9,138.5L599.4,138.1L599.5,138.6L598.1,139.2L598.5,139.6L597.8,139.6L597.8,140.1L598.8,140.1L598.4,140.8L597.4,140.9L597.5,141.2L598.3,141.3L598.1,141.7L596.7,142L598.1,143.1L596.2,143.2L597.3,143.8L596.3,143.9L597,144.5L594.4,144.3L594.8,145.3L594.1,145.6L594.5,145.8L594.2,146.1L593.3,145.4L593.7,145.2L592.9,145.1L592.7,145.7L589.9,145.3L588.8,148.8L588,149.3L586.3,148.8L584.3,149.9L582.9,149.3L582.2,148.6L582.5,147.8L579.8,147.5L576.3,146.1L575.2,146L575.9,144.1L575,142.8L575.9,141.6L575.2,140.3L574,139.2L573.2,137.3L574.8,134.2L576.3,132.3L575.8,130.7L576.5,129.5L575.6,128.4L576.1,127.8L577.4,127.6L576.8,125.6L577.1,121.6L578.5,120.3L580.2,120.9L586,118.1L587,118.4L589.4,117.8L590.9,118L591.6,117.1L593.3,116.3L593.5,116.2Z","type":"fortress","terrain":"mountains","owner":"azure","core":false},{"id":3,"name":"秋浦","kana":"あきうら","capital":"千穂","capital_kana":"ちほ","capX":562.1,"capY":130.7,"cx":566.9,"cy":130.5,"path":"M557.7,142.8L558.4,139.8L560,138.6L561.1,135L561.3,130.6L560.6,128.7L559.4,127.6L558.5,127.2L557.6,127.3L557,127.9L555.3,128L554.3,126.7L554.5,126.1L554.1,125.4L554.2,125.1L556.6,126L558.2,124.8L559.7,122.7L560.6,118.1L559,116.7L560,116.6L561.3,116L566.1,116.3L568.2,115.6L570.6,117L571.9,116.7L573,117L574.3,116.7L577,115.2L578.8,115.9L579.2,117.8L578.5,120.3L577.1,121.6L577.1,123.1L576.7,123.9L577.4,127.6L576.1,127.8L575.6,128.4L576.5,129.5L575.8,130.7L576.3,132.3L574.8,134.2L573.2,137.3L574,139.2L575.2,140.3L575.9,141.6L575,142.8L575.9,144.1L575.2,146L572.8,147.3L570.9,147.6L569.6,147.2L568.5,145.8L566.9,145L564.3,144.7L562.2,143.9L560.6,142.9L559.4,143.1L557.8,142.8L557.7,142.8Z","type":"oil","terrain":"hills","owner":"azure","core":false},{"id":4,"name":"宮浜","kana":"みやはま","capital":"杜沢","capital_kana":"もりざわ","capX":577.4,"capY":159.6,"cx":582.6,"cy":156.3,"path":"M592.7,145.7L593.3,148L592.6,147.2L591.7,147.4L591.6,148.6L590.3,149.7L591.2,150.4L591.2,150.9L589.1,151.8L590.6,152.4L589.2,153.6L590.2,154.3L590.5,154L590.8,154.6L590.7,155.4L590.2,154.8L589.8,155.8L590,156L589.3,156.4L589.6,157.1L590.2,156.9L590.9,157.3L590.3,157.2L589.9,157.5L590.4,157.8L590.7,158.9L590.4,159.6L589.1,159L589.2,158.5L588.4,158.1L588.7,157.5L586.6,156.8L584,157.3L583.3,158.5L583,158.5L582.6,157.5L581.5,157.7L580.9,158.8L581.5,158.7L581.6,159.1L579.7,160.8L578.5,163.9L578.6,167.1L577.1,167.4L577,168.9L575.5,169.2L575.6,169.5L573.9,168.9L573.6,167.7L573,167.2L571.5,166.8L570,167L569.2,166.2L568.1,165.8L566.5,166L565.5,165.6L565.7,164L567.6,163.4L569,161.9L569.5,159.3L571.7,155.9L570.7,152.4L572,151.8L572.4,149.9L570.7,147.4L571.6,147.6L575.2,146L576.3,146.1L579.8,147.5L582.5,147.8L582.2,148.4L582.6,149L584.5,149.9L586.1,148.8L588,149.3L588.8,148.8L589.9,145.3L592.5,145.6L592.7,145.7Z","type":"port","terrain":"plains","owner":"azure","core":true},{"id":5,"name":"羽月","kana":"うづき","capital":"霞沢","capital_kana":"かすみざわ","capX":566.8,"capY":160.2,"cx":560.9,"cy":157.7,"path":"M551.1,154.1L552.1,152L555.6,148.7L557.7,142.8L559.4,143.1L560.6,142.9L562.6,144.1L568.1,145.5L569.6,147.2L570.7,147.4L572.4,149.9L572,151.8L570.7,152.4L571.7,155.9L569.5,159.3L569,161.9L567.6,163.4L565.7,164L565.5,168.9L565.3,169.5L564.1,170.1L562.2,170.4L561.1,169.8L559.7,169.7L558.7,168.7L554.6,168.5L552.8,167.3L552.5,166.7L553.9,160.9L556,160.7L557,160.1L557.5,159.2L557.1,158.4L554.3,157.2L554.2,155.1L551.4,154.2L551.1,154.1Z","type":"farm","terrain":"mountains","owner":"azure","core":false},{"id":6,"name":"磐梯","kana":"ばんだい","capital":"湖沢","capital_kana":"こざわ","capX":569.4,"capY":169.7,"cx":564.4,"cy":176.2,"path":"M578.6,167.1L580.4,170.3L580.1,171.3L580.5,171.9L580.8,177.3L580.2,179.4L580.1,182.1L579.2,185.5L576.1,187.1L575.9,187.9L572.3,186.9L571.5,186.2L571.2,186.4L571.3,187.5L569.6,188.8L569,188.9L564.8,186.3L564.7,184.8L563.6,183.6L562,182.7L558.4,181.9L549.1,185.7L547.4,186.7L544.5,186.2L545,184L544.9,182L544.3,181L543.8,181L543.3,180.3L544.4,177.7L544,176.5L544.7,175.9L547.8,175.6L548.6,174.8L551.2,174.7L550.9,172.4L554.6,168.5L558.7,168.7L559.7,169.7L561.1,169.8L562.4,170.4L564.5,170L565.4,169.3L565.5,165.6L566.5,166L568.1,165.8L569.2,166.2L570,167L571.5,166.8L573,167.2L573.6,167.7L573.9,168.9L575.3,169.5L577,168.9L577.1,167.4L578.5,167.1L578.6,167.1Z","type":"farm","terrain":"mountains","owner":"azure","core":false},{"id":7,"name":"越沢","kana":"こしざわ","capital":"雪港","capital_kana":"ゆきみなと","capX":541.0,"capY":166.5,"cx":536.5,"cy":178.2,"path":"M512.7,185.3L518.3,183.6L521.4,182.2L522.3,181.4L523.6,181.6L525.2,181.1L529.1,178.4L531.3,177.3L533.5,174.4L535.2,172.9L536.4,169.7L537.4,168.3L541.6,165.8L542.9,165.7L545,164.9L548.7,161.9L549.6,156.7L551.1,154.1L554.2,155.1L554.3,157.2L557.4,158.7L557.5,159.2L557,160.1L556,160.7L554.2,160.8L553.7,161.2L552.5,166.7L553.2,167.7L554.6,168.5L550.9,172.4L551.2,174.7L548.6,174.8L547.8,175.6L544.7,175.9L544,176.5L544.4,177.7L543.3,180.3L543.8,181L544.3,181L544.9,182L545,184L544.5,185.9L543.6,185.6L542.3,184.1L541.8,184.1L541.3,184.8L539.5,185.4L539.5,186.7L538.6,187.2L538.3,188.1L536.7,188.7L536.1,189.6L533.9,190.1L533.6,188.1L531.9,186.6L531.4,184.8L530.7,184.5L527.6,185.2L526,186.6L525.6,187.8L524.6,187.6L522.1,188.1L521.2,188.6L520.5,188.1L520.5,187.3L520.2,186.8L517.9,186.4L517.4,186.6L517.3,187.6L516.4,188.7L515.1,189.3L514.3,186.5L512.8,185.4L512.7,185.3ZM529.5,163.5L531.8,163.5L531.6,164.6L530,167.1L527.7,168.3L524.8,168.9L524.7,168.3L526,167.9L526.1,166.8L527.2,165.6L526.6,165L525.3,165.3L525,164.8L525.2,163.5L526.5,161.6L528.9,159.8L529.9,158.6L530.6,158.5L530.4,160.1L529.1,163.3L529.3,163.9L529.5,163.5Z","type":"port","terrain":"plains","owner":"azure","core":false},{"id":8,"name":"霞浦","kana":"かすみうら","capital":"水沢","capital_kana":"みずさわ","capX":569.0,"capY":197.9,"cx":566.9,"cy":197.8,"path":"M575.9,187.9L574.8,189.4L573.9,192.4L572.5,194.6L572.2,196L572.5,197.4L571.3,199L571.6,201.5L572.9,204.4L577.1,210L576,209.7L573.9,208L571,206.9L567.9,206.9L566.4,207.6L562.6,207.6L559.5,206.4L556.2,203.1L554.8,203L553.9,202.2L553.2,200.6L555.8,200L556.9,198.7L558,198.5L559.4,197.4L563.2,196.9L563.7,196.4L564.8,194.4L564.5,191.2L565.4,190.4L564.8,186.3L569.4,188.9L571.3,187.5L571.4,186.3L574,187.4L575.9,187.9Z","type":"industry","terrain":"plains","owner":"azure","core":false},{"id":9,"name":"千岬","kana":"ちみさき","capital":"岬港","capital_kana":"みさきみなと","capX":562.5,"capY":212.4,"cx":563.3,"cy":215.6,"path":"M577.2,209.9L577.6,210.2L577.2,210.9L576.5,210.3L574.4,211L574.3,210.6L573.2,210.8L569.7,213.3L568.5,214.8L567.8,217L568.3,218.6L567.9,220.6L567.6,221L567,220.9L566.5,221.9L565.9,221.6L564.8,222.3L562.8,222.1L562.1,223L559.9,224.1L559.3,225.7L558.6,226.4L557,226.5L556.3,225.6L555.3,225.4L555.2,225L557.5,224.6L556.8,224L557.1,223.4L556.5,221.4L556.6,220.6L557.4,220.1L557.4,219.6L557.1,218.7L555.7,218.2L556.6,218L557,217.1L558,217.3L558.3,217L558.1,216.1L560.2,215.1L562.1,213.3L561.8,213.3L561.7,212.5L559.8,211.2L558.5,211.4L558.9,211.9L558,212.3L557.4,212L557.8,210.7L557.4,209.1L557.6,207.3L555.2,203.1L556.2,203.1L559.5,206.4L562.6,207.6L566.4,207.6L567.9,206.9L571,206.9L573.9,208L576,209.7L577.1,210L577.2,209.9Z","type":"industry","terrain":"coast","owner":"emerald","core":false},{"id":10,"name":"東雲","kana":"しののめ","capital":"帝浜","capital_kana":"ていはま","capX":555.5,"capY":211.0,"cx":551.9,"cy":211.3,"path":"M557.4,212L557.1,211.9L556.9,212.3L556.3,211.9L555.9,212.6L555.4,211.5L555.3,212L556.1,213.8L555.9,214.4L550.9,212.4L549.2,212.7L550,213.4L549.5,214.8L547.7,213.3L545.5,213L540.9,210.7L538.7,207.9L540.3,207.1L545.6,208.5L548.4,209.6L550.3,209.1L550.9,209.6L556.2,208.8L557.4,209.1L557.8,210.7L557.6,211.4L557.4,212ZM603.6,390.5L603.3,390.7L603.4,391.1L603,390.8L602,389L603.1,389.4L602.9,389.9L603.6,390.3L603.6,390.5ZM555.9,261.6L557.6,262.5L556.8,263.5L555.9,263.1L555,261.9L555.5,261.3L555.9,261.6ZM548.5,228.9L549.2,229.4L549.2,230.9L547.4,230.5L547.3,228.6L548.2,228.7L548.5,228.9Z","type":"tech","terrain":"coast","owner":"emerald","core":true},{"id":11,"name":"湘浦","kana":"しょううら","capital":"波湊","capital_kana":"なみなと","capX":552.9,"capY":215.8,"cx":548.4,"cy":217.4,"path":"M555.9,214.4L554.4,215.3L553,215.5L553.9,215.9L553.9,216.6L552.9,216.5L553.3,217L553.1,218.6L555,219.6L554.7,220.4L553.5,220.7L553.6,221.8L552.5,221.9L552.2,220.5L552.6,220.3L551,218.4L548.5,218.2L543.9,219.3L543.1,219.9L543.4,221.8L542.6,221.6L542.1,222.2L540.8,221.8L539.9,220.9L539.6,220L540.2,218.8L540,217L538.2,217L538.9,215.8L542,214.3L542.7,211.5L545.5,213L547.7,213.3L549.5,214.8L550,213.4L549.2,212.7L549.9,212.8L550.7,212.3L555.8,214.4L555.9,214.4Z","type":"industry","terrain":"coast","owner":"emerald","core":false},{"id":12,"name":"駿嶺","kana":"すんれい","capital":"嶺沢","capital_kana":"みねざわ","capX":527.9,"capY":224.9,"cx":530.2,"cy":224.2,"path":"M542.1,222.2L541.7,223.5L542.3,223.6L542,224.6L543.1,225.7L543,227.1L542.2,227.4L541.3,228.9L540.2,229.8L540.1,231.5L539.1,231.3L537,232.6L535.7,231.5L535.7,231.1L535.2,230.7L535.1,229.9L535.7,229.5L535.2,228.2L535.3,226.9L536.1,226.4L535.5,224.9L536,224L538.4,223.9L536.3,222.1L534.2,221.8L531.4,222.6L530.3,223.9L530.4,224.7L530.4,224.3L530.9,224.2L530.6,224.9L527.4,226.4L526.9,227.4L527.1,228L524.7,230.3L524.2,231.6L525,232.6L519.7,231.1L518.2,231.1L516.2,231.7L514.1,231.1L509.8,231.1L509.7,230L510.2,228.3L512.8,226.9L513.8,225.6L514.1,224.5L515.8,222.9L516.5,220.7L522.6,217.4L522.9,216.9L522.5,216.1L523.1,215.4L523.1,213.7L523.9,213L524.3,212.1L525.2,214.2L525.1,218.5L527.2,218.7L528,220.8L528.7,221.3L529.5,221.4L530.4,220.7L530.8,217L531.4,216.2L534.2,217.6L540,217L540.2,218.8L539.7,219.6L539.7,220.5L540.6,221.7L541.7,222L542.1,222.2Z","type":"industry","terrain":"mountains","owner":"emerald","core":false},{"id":13,"name":"濃浜","kana":"のうはま","capital":"尾港","capital_kana":"おみなと","capX":498.7,"capY":221.0,"cx":503.2,"cy":225.7,"path":"M509.8,231.1L503.3,232.7L500.8,232.9L502,231.2L502.7,232L506.1,229.9L506.4,229.9L506.5,230.7L506.6,230L507.3,230L506.7,229.8L506.9,229L506.1,228.3L504.4,228.4L504.3,229.1L503.9,229.2L503.9,228.8L503.3,228.7L500.9,228.8L499.7,227.9L500.1,226L499.1,227.6L498.8,229L499.8,229.8L499.9,230.6L497.6,229.7L497.4,229.1L497.8,227.8L497.1,227.1L497,225.4L498.1,223.7L498.2,222.8L498,222.7L497.5,223.8L497.1,223L497.3,223.9L496.8,224L496.5,223.6L496.5,224.1L495.6,224L494,221.8L494.2,219.8L495.8,217.6L496.7,217.7L499.6,216.9L500.9,217.6L501.9,218.9L503.9,219.7L506.3,219.2L508.9,220.2L511.4,219.2L511.2,219.8L511.9,220.8L513.7,220.4L516.5,220.7L515.8,222.9L514.1,224.5L513.8,225.6L512.8,226.9L510.2,228.3L509.8,230.8L509.8,231.1Z","type":"industry","terrain":"plains","owner":"emerald","core":false},{"id":14,"name":"筑紫","kana":"ちくし","capital":"那津","capital_kana":"なつ","capX":369.8,"capY":252.5,"cx":372.4,"cy":253.3,"path":"M362.2,255.2L362.6,254.4L364.8,253.7L364.9,253.4L363.9,253.5L363.3,252.9L364.6,252.2L364.7,251.8L365.4,251.7L365.6,251.1L366.2,251.5L366.1,252L366.9,252.1L366.7,252.6L367.2,252.9L367.7,252.4L369.2,252.3L369.4,251L368.4,251.5L367.3,251.1L367.3,250.6L368.3,251.1L369.1,250.8L370.8,249.5L370.4,248.3L371.2,247.3L371.6,247.4L372.4,246.8L374.1,246.7L375.5,245.6L377.9,245.6L377.8,246L378.6,245.9L379.3,246.6L381.5,245.1L381.7,245.3L381.2,246.4L381.3,246.9L381,246.9L380.6,248.1L381.5,248.1L381.5,249.4L382.9,251.7L385.3,252.1L384.8,252.7L384.9,253.6L384.3,254.4L381,254.4L379.1,255.8L378.1,257.5L377.9,259.6L378.5,261.4L378.1,262.7L375.1,261.5L374.1,262.2L372.7,262.4L371.6,263.3L371.4,264.3L370,264.7L369.8,262.5L368.4,261.5L368.4,260.7L369,259.6L370.5,259L371.1,258L372,257.6L371.9,256L371.2,255.9L369.7,256.6L366.6,255L363.3,255.2L362.2,255.2Z","type":"port","terrain":"plains","owner":"emerald","core":false},{"id":15,"name":"関門","kana":"かんもん","capital":"門港","capital_kana":"もんみなと","capX":390.7,"capY":240.6,"cx":392.1,"cy":240.4,"path":"M406,240.6L405.9,241.6L405.2,242.2L405.4,244.6L403.9,245.6L404.4,247.5L402.3,248.8L402,248.9L402.1,248.5L402.8,247.7L403.4,247.8L403.2,246.9L400.6,246.1L398.3,244.4L397.5,245L397.8,245.1L397,245.1L396.8,244.7L397.7,243.9L396.1,243.3L393.9,243.9L393.1,243.7L393.1,244.6L392.7,244.7L392.5,244.3L390.9,243.8L390.1,244.8L389.7,244.4L389.1,244.7L389.4,244.1L389.1,243.6L388,245.2L386.5,245.9L385.6,245.4L384.9,245.8L384.6,244.9L383.4,243.8L382.1,243.4L379.7,246.1L378.9,245.6L379.6,244.9L379.6,243.3L378.9,243.1L378.6,242.2L379.8,240.7L378.8,238.9L379.2,237.6L382,236.8L380,236.5L380.3,236.1L380.9,235.7L381.5,236.3L382.8,236L384,236.2L384.1,236.9L384.8,237.1L385.2,236.6L384.7,235.9L386.4,235.7L386.9,236.3L385.9,236.1L385.5,237.1L387.8,236.6L388,236.1L389.6,236L389.5,235.4L390.5,234.5L390.4,234.1L392,233.2L392.4,232.2L393.2,232.1L393.2,231.3L393.6,231.2L394.8,231.2L395.3,233.1L394.6,234.3L394.8,235.5L396.7,236.3L396.3,237L396.7,238.2L397.5,238.4L399.4,238L400.1,238.3L400.4,237.6L401.2,237.2L401,236.2L402.2,235.3L402.6,237.3L403.7,239.5L405.8,240.6L406,240.6ZM405.9,247L405.5,247.3L404.9,246L405.7,245.3L406.7,245.6L407.7,246.5L409.2,246.1L409.5,245.6L410.5,245.6L409.9,246.3L408.8,246.5L408.6,247.5L407.8,247.4L407.5,246.7L406,247.1L405.9,247Z","type":"fortress","terrain":"hills","owner":"emerald","core":false},{"id":16,"name":"薩摩","kana":"さつま","capital":"錦江","capital_kana":"きんこう","capX":372.6,"capY":292.3,"cx":374.1,"cy":292.4,"path":"M357.2,288.1L357.5,289.2L356.1,291.2L355.4,291.7L354.7,291.3L354.6,290.9L357,288.5L357.2,288.1ZM384.3,294.7L382.5,295.3L381.6,296.8L383.4,297.5L382.8,298.4L384,298.4L382.5,299.5L381.5,299.6L380.9,300.9L380.2,301.6L377.2,302.5L374.5,304L374.6,302.6L376.2,301.6L377.3,297.2L376.3,295.4L375.4,294.9L375.3,293.2L374.1,293L373.2,292.4L374.1,291.6L375.1,291.7L375.6,291.8L375.8,292.8L376.4,292.9L377.3,291.9L377.6,291.1L377.5,290.4L376.9,289.9L375.1,289.6L373.7,290.5L371.7,295L372.9,297.8L374.6,298.6L374.2,300.3L373.1,300.9L372.1,300.8L371.3,299.5L370.4,299.1L365.9,299.1L365,297.5L365.6,297.3L363.8,295.9L364.7,295.6L366,296.4L367.8,294.2L368.2,291.9L366.6,289.7L365.1,288.9L364.9,288.3L365.3,287.4L366.1,287.7L365.4,287L365.8,285.5L364.9,284.2L365.5,283.2L365.1,282.3L366.4,281.5L367,282.1L367.4,282L368.3,280.9L369.3,281.8L369.9,281.9L372.9,280.9L373.6,281L375.6,282.3L375.4,282.8L377,285L378.8,286.4L379.1,288.3L380.6,288.9L382.3,291.4L384.4,291.8L385,292.3L385.1,293.6L384.4,294.6L384.3,294.7ZM374.9,316.4L374.3,318.1L373.5,318.9L371.1,319.4L370.2,319.1L368.9,316.1L369.9,316L370.8,314.8L371.4,314.6L374.2,315.9L374.9,316.4ZM382.4,307.2L383.1,308.3L382.7,308.6L382.9,310L382.4,310.7L382.5,311.7L382.1,312.8L381.4,312.9L381,313.6L380.6,316.5L378.8,317L378.4,314.5L378.8,314.7L379.9,313.1L380.4,312.1L380.1,310.5L382.2,307.3L382.4,307.2ZM365.8,314.5L366.7,315.2L365.7,315.5L365.3,314.7L364.9,314.9L364.3,314.2L365.5,314.3L365.8,314.5ZM360.1,286.8L360.1,287.6L359.3,287.9L358.7,287.6L358.6,287L357.9,287.2L358.4,286.5L359.7,287.2L360.1,286.7L360.1,286.8Z","type":"port","terrain":"coast","owner":"emerald","core":false},{"id":17,"name":"江嶺","kana":"こうれい","capital":"春沢","capital_kana":"はるざわ","capX":328.3,"capY":156.4,"cx":343.5,"cy":167.2,"path":"M334.8,145.2L338.5,144.5L341.6,142.5L343.1,140.2L343.1,137.5L345.4,136.4L352.8,149.7L360.3,158.5L364.1,161.8L364.3,163.6L365.3,164L366.3,166.5L367.5,167.4L370,171.3L371.2,172.5L372.5,176.5L374,178.4L373.4,179.5L373.9,182.8L375.1,187.3L373.7,190.3L372.5,190.1L371.7,190.4L369.8,189.9L370.1,189.2L369.7,187.2L370.4,185.8L369.9,185.5L370,184.9L368.1,184.8L366.9,184.3L366.4,183.2L365,182.2L365.1,180.7L367.5,180.1L367.2,179.5L366.4,179.1L365.4,178.9L364,179.4L360.8,178.6L359.2,179.3L359.2,178.4L358.2,178.1L357.8,177.6L357.1,177.5L355.9,178.3L355.8,180.1L355.1,180.1L350.5,178.8L349.2,178L346.8,178.3L345.9,176.9L342.9,177.2L342.6,176.9L344.2,175.3L340.7,174.6L336.6,176L336.3,175L335.2,174.2L333.9,174.5L333.4,175L333.5,176.3L332.6,177L330.5,176.9L330.7,175.6L325,176.5L329.3,169.2L329.4,168L331,166.4L330.3,165.7L328.1,165.4L325.3,164.1L323.8,164.2L323.2,163.8L323.7,161.8L323,162L322.6,161.7L323.4,161L323.1,160L323.2,158.8L325.1,157.8L325.5,156.4L324.9,155.6L323.9,155.3L323.5,154.6L322.3,154.6L321.6,154.2L320.7,151.5L318.6,151.6L316.7,151L317,149.5L315,150.4L314.1,149.5L313.5,151.2L311,150L309.7,148.4L307.8,147.5L309.5,146.4L313,145L318.9,144.7L321.4,145.3L329,144.5L330.2,145.3L332,145L334.8,145.2Z","type":"fortress","terrain":"mountains","owner":"emerald","core":false},{"id":18,"name":"畿央","kana":"きおう","capital":"水丘","capital_kana":"みずおか","capX":309.5,"capY":173.0,"cx":309.6,"cy":168.1,"path":"M299.8,157.8L299.8,154.9L302.4,153.8L304.7,151L306.6,149.6L307.8,147.5L309.7,148.4L311,150L313.5,151.2L314.1,149.5L315,150.4L317,149.5L316.7,151L318.6,151.6L320.7,151.5L321.6,154.2L322.3,154.6L323.5,154.6L323.9,155.3L324.9,155.6L325.5,156.4L325.1,157.8L323.2,158.8L323.1,160L323.4,161L322.6,161.7L323,162L323.7,161.8L323.2,163.8L323.8,164.2L325.3,164.1L328.1,165.4L330.3,165.7L331,166.4L329.4,168L329.3,169.2L324.8,176.8L322.6,179.6L322,180L321.3,179.8L320.3,180.9L319.2,181.5L319,182.3L315.7,183.3L314.4,183.1L312.3,182L310,182.8L307.7,182.6L308.7,182L308.9,181.3L308.6,180.9L309.9,180.2L308.3,180.6L307.9,181.9L306.4,181.9L304.4,180.7L304,179.9L305.6,179.8L305.3,179.4L306.4,179.6L305.6,178.2L305.8,177.4L305.3,177.6L304.7,179L302.2,178.7L302.1,177.3L302.4,176.9L303.2,176.3L305.1,176L305.3,175.3L304.2,175.8L303.6,175.6L303.4,175.1L300.8,176.7L300.3,176.3L300.9,175.6L299.8,175.7L299.9,175L301.2,174.3L300.2,174.2L299.6,173.2L299.9,173L302.5,173.2L302.9,174.1L303.9,172.7L305.3,172.8L304.8,172.4L301.6,171.8L300.4,171.1L301.2,169.9L302.6,169.4L303.3,168.1L302.6,167.6L302.3,166.4L300.7,165.2L298.1,165.3L297,163.7L296.2,159.8L296.6,159.4L298.1,159.8L299.7,159.7L299.7,162L300.5,162.5L302.2,162.9L300.1,161.6L300.7,160.1L300.3,158.7L300.7,157.8L300.2,157.6L299.8,157.8ZM289.9,158.5L290.9,158.5L291,159.3L290.5,159.6L288,159.6L288.2,158.5L289.3,158.2L289.9,158.5ZM291.5,161.4L292.1,161.8L291.9,162.4L291.3,162.4L289.5,161.3L290.5,160L291.1,161.1L291.5,161.4ZM295.6,164L294.7,163.6L292.9,163.9L291.9,163.1L293.1,162.5L291.8,160.5L292,158.7L292.9,158L293.3,157.9L295.8,159.4L296.1,162.5L296.5,163.1L295.8,163.8L295.6,164ZM248,153.7L248.2,154.4L247.8,154.6L246.5,154.5L247.2,155L246.7,155.3L245.6,155.2L244.8,154.7L245,153.7L245.7,153.9L247.2,153.5L248,153.7ZM284.6,173.9L284.3,174L284.7,172.9L286.2,173.8L285.2,174.4L284.7,173.9L284.6,173.9ZM298.4,173.2L298.4,173.8L296.4,174.7L297,173.6L296.5,172.4L297.4,172.3L297.4,172.8L298.3,173.1L298.4,173.2Z","type":"tech","terrain":"plains","owner":"emerald","core":false},{"id":19,"name":"首丘","kana":"しゅきゅう","capital":"漢丘","capital_kana":"かんきゅう","capX":308.2,"capY":164.8,"cx":309.1,"cy":165.1,"path":"M310.2,161.7L311.2,161.8L311.6,162.4L312.1,163.8L311.8,165.3L313.8,165.1L314,165.5L313.9,165.9L313.1,166.2L313.3,166.9L312.6,167.7L310.4,168.5L310.1,168L306.6,168.5L305.8,167.7L304.5,167.2L304.4,166.5L303.2,165.2L303.6,164.5L305.2,165L305.9,164.8L306.4,164.5L306.6,163.7L307.8,163.6L309.4,161.9L310.2,161.7Z","type":"tech","terrain":"plains","owner":"emerald","core":false},{"id":20,"name":"仁港","kana":"じんこう","capital":"潮港","capital_kana":"ちょうこう","capX":300.8,"capY":167.8,"cx":300.2,"cy":168.2,"path":"M301.2,169.9L299.7,169.6L299.1,170.2L298.4,169.8L299.1,168.9L297.9,168.2L297.9,167.3L299.2,166.5L298.2,166.7L298.1,165.3L300.7,165.2L302.3,166.4L302.6,167.6L303.3,168.1L302.6,169.4L302.1,169.7L301.2,169.9ZM297,166.2L297.6,166.9L295.5,167.5L293.8,168.7L293.2,168.7L292.6,168.1L291.7,168.2L291.5,167.5L293.2,166.7L294.6,166.6L295.7,165.7L296.8,166.1L297,166.2Z","type":"industry","terrain":"coast","owner":"emerald","core":false},{"id":21,"name":"清嶺","kana":"せいれい","capital":"清沢","capital_kana":"せいざわ","capX":321.9,"capY":189.6,"cx":331.2,"cy":189.1,"path":"M322,180L322.6,179.6L325,176.5L330.7,175.6L330.5,176.9L332.6,177L333.5,176.3L333.4,175L333.9,174.5L335.2,174.2L336.3,175L336.6,176L340.7,174.6L344.2,175.3L342.6,176.9L342.9,177.2L345.9,176.9L346.8,178.3L349.2,178L350.5,178.8L353,179.4L348,182.4L346.8,184.1L347.4,184.6L347,185.7L344.7,186.4L343.8,186.2L341.9,184.5L341,186L339,185.5L338.1,186.2L337.1,186L336.3,187.6L337.1,188.7L334.2,188.2L333.7,188.8L331.9,189.7L331.7,190.5L330.7,191.5L329.9,191.7L330.2,192.3L331.2,192.5L332.6,194L331.8,195L331.5,197.1L332,198L331,199L331.2,200.3L332.3,200.1L334.2,201L335.6,200.7L336.2,201.1L336.5,202.5L335.3,202.3L334.6,202.8L334.7,204.3L333.6,206.2L331.6,207.2L330.8,206.7L328.9,207.5L325.4,206.1L324.2,204.5L323.7,201.9L322.1,201.2L321.2,201.4L321.5,198.8L323.2,196.4L322.5,196.2L321.7,196.8L321.1,195.2L319.5,195.6L318.7,195.4L318.8,195L318.1,194.2L318.4,192.3L314.4,192.5L314.8,190.4L316.7,187.9L317.4,187.7L317.8,186.3L317.4,185.1L315.7,183.3L319,182.3L319.6,181.1L320.3,180.9L321.3,179.8L321.8,179.9L322,180Z","type":"farm","terrain":"mountains","owner":"emerald","core":false},{"id":22,"name":"洪原","kana":"こうげん","capital":"洪沢","capital_kana":"こうざわ","capX":299.7,"capY":190.7,"cx":299.6,"cy":189.9,"path":"M292.8,194.5L293.5,195.9L291.7,195.8L292.1,194.9L291.1,195.1L291.7,194.2L290.7,194.2L290.4,191.2L291.1,190.6L291.6,190.5L291.9,191L291.7,191.6L292.1,192.9L292.8,193.6L292.2,193.8L292.8,194L292.7,194.3L292.8,194.5ZM303.7,205.6L300.5,206.8L298.9,204.8L299.2,204.6L298.4,204.2L297.7,203.3L296.7,203.3L296.1,202.7L295.2,203.3L295.3,202.6L296.2,202.2L298.1,202.2L297.5,201.5L296.3,200.9L297.6,198.9L295.7,198.2L297.6,197.4L297.4,197L295.9,196.8L295.4,196.4L295.7,196.2L295.3,195.6L298.5,194.2L296.9,194.2L296,195L295.3,194.8L294.9,193.5L295.7,192.7L294.5,192.4L294.2,190.9L295.7,190.7L295.9,190.1L294.9,189.4L295.6,188.9L294.7,188.4L294.7,187.6L295.4,187.5L294.8,186.8L293.7,187.6L293.8,189.7L293.3,190.6L291.8,190L292.1,188L291.8,187.9L291.8,187.2L291.1,187L290.6,188.1L290,188.1L291.1,190.5L289.9,191.2L289.7,190.5L290,189.8L289.2,188.8L289.3,187.5L288.1,188.5L286.7,188.8L286.1,188L287.4,187.9L287.7,187.4L286.2,186.4L285.5,188L285.4,186.4L286.4,185L286.9,185.9L287.7,185.9L287.1,185.1L287.9,185.3L288.4,185L287.3,184.8L287.7,183.9L287.1,183.5L287.1,183.1L288.2,182.6L288.1,183.4L289.3,183.4L289.6,181.1L290.2,180.9L290.6,183.2L290,183.9L290.2,184.6L289.5,185.1L289.7,185.7L290.4,185.3L291.5,185.7L290.8,184.1L291,183.9L291.7,184.4L292.8,183.9L292,183.3L292.7,183.2L293.2,182.1L293,181.7L291.4,181.2L291.3,181L291.8,181.1L292,180.7L290.9,180.4L291.4,180L292.4,180.3L292.4,179.8L293.9,179.9L294.1,180.3L293.5,181L293.7,181.5L294.5,181.2L294.8,181.8L294.4,183.6L294.9,184.3L295.9,181.4L297.6,182.8L296.9,181.6L295.2,180.1L295.5,179.8L296.4,180.6L297.3,180.6L295.7,179.6L295.4,178.6L295.9,178.5L298.7,180.1L299,180.5L298.6,181.1L298.9,182.4L299.3,182L299.4,180.9L300.2,180.2L302.3,180.5L303.3,181.2L302.9,182.9L303.7,182.2L304.2,182.4L304.2,184.3L304.7,185.7L304.2,186.1L304.8,186.6L305.3,185.3L305.1,184.6L306.2,184.8L305,183.5L307.7,182.6L310,182.8L312.3,182L314.4,183.1L315.7,183.3L317.4,185.1L317.8,186.3L317.5,187.4L316.7,187.9L315.4,189.5L311.5,188.3L310.9,189.7L311,193.8L310.4,194.6L312.8,195L314.6,194.6L316.5,197.2L316.7,199.1L317.2,200.6L318.6,200.3L320.8,199L321.7,196.8L322.5,196.2L323.2,196.4L321.5,198.8L321.2,201.4L322.1,201.2L323.7,201.9L324.2,204.5L325.4,206.1L324.1,207L321.9,207.4L320.3,207.2L320.3,206.4L319,206L317.8,204.2L317,203.6L316.2,204.4L311.8,205.4L311.2,204.6L311.5,203.5L310.5,203.3L304.9,204.4L303.7,205.6Z","type":"farm","terrain":"plains","owner":"emerald","core":false},{"id":23,"name":"全原","kana":"ぜんげん","capital":"全沢","capital_kana":"ぜんざわ","capX":312.7,"capY":211.6,"cx":310.2,"cy":215.6,"path":"M293.7,223.7L293.2,223.1L293.3,222.5L295.1,219.6L297.9,219.1L299.2,218.3L300.5,219.3L299.9,217.9L295.7,218.2L294.4,217.5L294.5,216.5L297.9,214.5L298.7,213.7L298.8,212.9L299.7,212.4L301.6,212.4L302.9,213.3L303.1,212.5L300.8,210.9L301.5,210.5L303.3,210.5L304.4,209.7L303.6,209.2L301.6,209.9L298.4,209.8L298.3,208.7L297.2,208.3L296,208.5L295.9,207.6L301.9,207.1L305.2,205.6L305.3,205.2L303.7,205.6L304.9,204.4L310.5,203.3L311.5,203.5L311.2,204.6L311.8,205.4L316.2,204.4L317,203.6L317.8,204.2L319,206L320.3,206.4L320.3,207.2L321.9,207.4L324.1,207L325.4,206.1L328.9,207.5L330.8,206.7L331.6,207.2L332.3,206.6L333.4,208.2L333.3,209.9L332,211.3L329.4,212.1L328.9,213L327.7,214L325.6,219.7L326.3,219.9L326.7,221.8L327.4,222.6L327.2,223.3L326.1,224.4L325.9,225.8L325.3,226.3L323.8,225.2L322.1,224.7L320.3,225.9L316.6,226.1L315.8,225.6L313.1,226.2L312.1,226L311.5,225.5L311.5,224.6L310.8,223.6L311.1,222.8L310.5,222.1L309.7,222.2L309,223.4L308.2,223.4L307,222L305.7,221.3L303.8,221.6L303.1,222.1L303.2,222.9L302.1,224.6L297.9,225.8L297.2,225.6L297.6,223.2L296.8,223L294.2,223.6L293.7,223.7Z","type":"farm","terrain":"plains","owner":"emerald","core":false},{"id":24,"name":"慶嶺","kana":"けいれい","capital":"安丘","capital_kana":"あんきゅう","capX":355.1,"capY":191.6,"cx":353.2,"cy":197.4,"path":"M373.7,190.3L374.4,193.6L374.2,195.9L372.9,197.7L372.6,201.4L373.9,204.2L372.6,205.7L374.5,207L377.2,204.6L377.7,204.9L378.1,206.4L376.7,208.5L375.7,213.6L374.2,216.6L374.7,217.3L372.5,216.9L369.6,217.1L368.9,215.9L367.1,215.4L365,215.8L364.1,216.4L364.3,217.4L361.9,218.3L360,217.8L356.7,219.4L354,218.8L352,219.1L350.5,218L350.3,216.5L349,217.7L348.3,217.5L346.9,218.1L344.7,217.3L341.4,217.2L341,216L341.4,214.8L338.9,212.4L334.8,211.6L333.5,210.5L333.4,208.2L332.3,206.6L333.6,206.2L334,205.6L334.7,204.3L334.6,202.8L335.3,202.3L336.5,202.5L336.2,201.1L335.6,200.7L334.2,201L332.3,200.1L331.2,200.3L331,199L332,198L331.5,197.1L331.8,195L332.6,194L331.2,192.5L330.2,192.3L329.9,191.7L330.7,191.5L331.7,190.5L331.9,189.7L333.7,188.8L334.2,188.2L337.1,188.7L336.3,187.6L337.1,186L338.1,186.2L339,185.5L341,186L341.9,184.5L343.8,186.2L344.7,186.4L347,185.7L347.4,184.6L346.8,184.1L349.1,181.6L353,179.4L355.8,180.1L355.9,178.3L357.1,177.5L357.8,177.6L358.2,178.1L359.2,178.4L359.2,179.3L360.8,178.6L364,179.4L365.4,178.9L367.2,179.5L367.5,180.1L366.8,180.5L366,180.2L365.1,180.7L365,182.2L366.4,183.2L366.9,184.3L368.1,184.8L370,184.9L369.9,185.5L370.4,185.8L369.7,187.2L370.1,189.2L369.8,189.9L371.7,190.4L373.4,190.3L373.7,190.3ZM413.4,165.4L413.9,165.7L413.8,166.3L413.2,167.6L412,167.7L410.9,167L411,166L413.1,165.4L413.4,165.4Z","type":"industry","terrain":"mountains","owner":"emerald","core":false},{"id":25,"name":"遼原","kana":"りょうげん","capital":"奉天","capital_kana":"ほうてん","capX":261.3,"capY":139.5,"cx":248.6,"cy":150.0,"path":"M288.4,150.7L287.7,151.3L288.2,151.8L286.9,151.6L285,153.4L283.5,153.2L280.3,154.6L280.4,155.5L278.8,155.2L272.5,159.8L271.6,161.7L269.8,162.8L265.4,163.1L263.9,162.4L264,161.9L263.3,163.5L262.3,163.4L261.3,164.2L261.2,163L259.9,163.6L259.2,163.1L259.4,163.9L258.7,164L259.4,164.4L258.9,164.8L256.3,164.8L255.8,165.6L254.4,165.5L247.8,168.7L245.7,170.5L245.5,171L246.2,171.1L244.9,172.1L243,172.4L243.4,172.8L242.2,172.4L243,173.1L242.8,173.5L241,172.5L239.4,173.6L240.4,173.8L240.7,174.5L235.2,175.3L234.5,176.2L233.7,175.6L234.2,174.2L233.5,174.1L233.8,173.5L240.4,171.8L239.4,169.7L243.6,168.1L238.7,168.5L237.6,166.8L235.1,166.5L237.9,165.2L238.7,165.5L238,163.2L242.8,161L242.2,160.7L244.2,159.5L244.2,158.7L245.4,158.2L245.6,157.3L247.9,155L246.1,153.8L246.2,152.6L245.7,152.8L242.5,151L242.2,149.6L242.8,149.1L241.2,150.8L239.2,150.9L236.7,149.7L234.5,150L233,151.5L232.3,151L231.7,152.1L232.6,152.4L230.3,152.9L230,153.8L227,156.2L227.5,156.6L226.4,157.1L226.1,158.4L218.7,161.1L217.4,159.9L217.4,158.5L216.1,158.5L215.3,154.5L212,154.6L210.8,153.6L210.8,152.6L209.2,153.2L206.7,151L207.4,149.5L208.7,149.3L207.8,148.3L210.5,146.9L213.2,144L212.1,139.8L213,136.2L211.5,134.8L214.6,132.4L216.1,134.2L218.6,134.9L218.1,135.5L220.9,138.8L220.9,140.6L221.7,140.6L222.1,139.6L225.9,136.8L226.4,135.4L231.3,133.6L232.5,134.1L236.9,131.1L239,130.7L239.9,131.7L241,131.6L242.8,130.7L243.5,129.1L244.8,128.5L247.7,129.5L249.1,129.3L249.5,128.8L248.6,127.4L249,126.9L253.4,128.4L257,127.7L259.6,125.1L263.6,124.1L265.1,119.6L268.3,121.5L271.5,122.5L271.6,123.3L273.1,124.1L272.5,125.2L273.3,125.8L272.7,126.6L273.8,127L277.2,123.9L278.7,124L278.4,126.9L279.7,127.8L279.5,129.2L281.2,130.2L281.3,131.2L282.5,132.3L282.1,133.1L283.4,133.5L283.8,135.1L285.8,135.3L283.5,137.7L283.7,140.9L285.4,140.9L286.8,144.1L288.9,146.2L289.2,147.4L286.9,150.1L288.4,150.5L288.4,150.7ZM237.4,167.2L237.7,167.5L237.3,167.6L237.4,168.4L236.4,168.4L236.9,167.8L236.7,167.6L235.5,168.2L235.5,167.8L236.4,167.1L237.3,167.2L237.4,167.2Z","type":"oil","terrain":"hills","owner":"crimson","core":false},{"id":26,"name":"燕北","kana":"えんぼく","capital":"石門","capital_kana":"せきもん","capX":155.0,"capY":184.3,"cx":179.2,"cy":166.2,"path":"M191.2,177.4L194.7,181.6L193.9,182L193.8,183.2L191.5,184.2L189.6,186.7L182.1,186.8L177.9,191L177,189.3L175.4,191.2L175.5,192.4L172.6,192.8L170.1,197.4L168.8,198.9L166.6,199.7L164.2,202.9L165,205L166.3,205.9L166.4,206.7L165,207.7L163.1,206.5L162.1,206.4L160,208L159,206.9L155.6,207L153.1,205.7L150,205.5L148.8,204.4L145.6,204.4L143.4,202.9L143.6,202.1L142.3,200L144.3,199.5L145.1,198.2L146.2,198.3L146,195.3L149.6,190.8L150.2,188.7L146.5,183L143.5,181.8L143.4,178.4L146.9,175.1L146,173.6L147.2,172L149.2,171.4L150.4,172.1L152.2,171.9L153.8,170.7L155.4,166.5L153.7,165L153.6,162.6L149.6,161.8L148.1,160.6L148.9,159.4L149.7,159.9L150.2,158.6L155,157L152.5,156.6L150.8,152.1L146.9,147.9L148.8,146.9L147.9,145.5L148.1,144L149.3,142.7L151.2,142.1L151.7,139.2L154,137.6L155.2,135.7L158.6,135L160,138L160.1,139L159.3,139.5L159.4,141.7L163.7,142L165,141.6L164.9,140.4L171.4,137.9L173.5,139.5L177.3,137L179.9,138L182.3,137.3L183.4,136.3L182.6,133.4L183.4,132.4L185.9,131.4L189.6,131.6L191.1,129.7L191.8,130.5L194.3,129.8L196.9,132.5L197.1,133.8L196.5,134.5L197.8,135L198.1,136.7L199.9,136.4L200.2,139.7L199.8,140.1L198.8,139.5L198.5,140.3L199.4,141.9L200.3,142.1L200.1,143.5L200.9,145.2L206.3,144.5L207,145L211.4,145.2L210.5,146.9L207.8,148.3L208.7,149.3L207.4,149.5L206.8,151.1L209.2,153.2L210.8,152.6L210.8,153.6L212,154.6L215.3,154.5L216.1,158.5L217.4,158.5L217.4,159.9L218.7,161.1L214.9,162.3L214.9,163.2L212.7,164.1L211.9,165.8L211,166.1L211.3,166.5L211.9,166L211.9,168.3L207.5,171.4L208.2,170.6L207.1,170.8L207,170.3L206.1,171.1L202.9,171.1L200.5,172.5L196.7,170.3L196.7,168.8L195.2,167.9L195.5,166.3L193.7,165.9L193.2,166.5L192.2,166L192.2,165.1L191.1,163.9L190.7,161L193.9,161.4L193.7,160.3L188.1,157.4L186.9,155L187.6,154.2L189.6,153.8L190.5,153.1L184.2,152.4L180.8,149.7L180.5,148.5L178.2,150.2L177,149.9L178.4,151.8L175.5,151.8L173.3,153.8L169.6,154.3L172.1,157.7L170.9,159L167.4,160L165.9,161.1L167.6,163.3L166.1,163.7L166.5,165.4L168.7,165.8L169.9,166.8L172,166L175.1,166L177.7,167.6L178.3,167.3L177.9,166.7L179.5,165.7L182.2,165.7L183,168.7L182.6,170.3L183.6,171.3L181.1,172.9L181.3,175L183.5,176.5L185.1,176.3L185.6,177.4L187.6,178.1L190,177.6L191.2,177.4ZM204.2,172L204.4,172.3L203.7,173.2L202.8,173.8L202.3,173.6L202.3,172.4L202.9,172.3L203.3,172.8L204.1,172.3L204,172.1L204.2,172ZM187.6,159.8L186.5,161.6L186.9,162.4L187.8,162.7L186.9,163.2L187.1,163.8L186.5,165.5L183.2,164.7L183.9,163.5L183.7,162.9L182.1,162.3L181.7,161.5L182,160.6L185.5,160.2L187.6,159.8Z","type":"farm","terrain":"plains","owner":"crimson","core":true},{"id":27,"name":"津門","kana":"しんもん","capital":"海門","capital_kana":"かいもん","capX":187.1,"capY":171.3,"cx":189.3,"cy":167.7,"path":"M196.7,170.3L195.3,170.5L193.2,171.5L193.9,173.1L193.1,172.9L191.7,175.1L191.2,177.4L187.9,178.1L187.3,177.7L185.8,177.5L185.1,176.3L183.5,176.5L181.8,175.6L180.9,174.1L181.1,172.9L183.6,171.3L182.6,170.3L183,168.7L182.2,167.1L182.2,165.7L183.4,164.7L186.7,165.4L187.1,163.8L186.9,163.2L187.8,162.7L186.9,162.4L186.5,161.5L187.6,159.8L188.4,159.7L189,158.9L189,157.9L191.3,158.9L192.5,160L193.7,160.3L193.9,161.4L190.7,161L191.1,163.9L192.2,165.1L192.2,166L193.2,166.5L193.7,165.9L195.5,166.3L195.2,167.9L196.7,168.8L196.7,170L196.7,170.3Z","type":"port","terrain":"coast","owner":"crimson","core":false},{"id":28,"name":"斉魯","kana":"せいろ","capital":"泉城","capital_kana":"せんじょう","capX":186.1,"capY":200.9,"cx":211.3,"cy":203.1,"path":"M194.7,181.6L197.6,183.1L203.1,184L204.4,183.1L206.6,183L207.9,183.6L207.7,184.1L208.5,185.2L211.6,188.2L211.6,188.7L210,187.9L209,188.1L208,190.4L208.1,193.2L212,195.1L217.7,194.9L219.2,193.7L218.8,192.4L222.7,190.6L224.3,189.2L223,188.6L229.3,186.8L231.5,186.9L232.8,188.2L234,188.3L234.4,189.8L236.5,189.7L236.8,189.2L238.1,191.1L239.2,191.6L240.4,191.5L239.4,191.3L239.9,191L244.2,191.6L244.6,190.4L245.7,190L246.5,191.7L247.2,191.2L252.5,192.1L251.1,192.6L251.4,193.2L250.8,192.9L251.8,194.4L249.9,195.4L249.7,194.9L249.7,195.9L249.1,196.5L250.7,196.4L250.6,197.7L249.1,197.6L249.5,198.3L248.5,198.8L246.5,198.5L246.6,197.9L247.5,197.9L246.2,197.4L246.3,196.6L246,197.4L244.7,197.9L244.9,197L243.4,196.8L243.7,197.4L240,198.7L239.8,199.8L238.3,199.4L239.4,198.5L237.9,198.8L237.2,200.2L234.3,200.7L232.7,201.7L230.6,200.9L229.4,201.3L229.4,202.2L230.6,201.4L231.9,202.3L230.9,204.1L230.1,203.1L229,203.5L229.1,204.7L228.1,204.8L228.8,206.9L224.7,208.1L223.9,207.9L224.8,206.4L224.1,205.4L223.9,206.5L221.6,205.9L221.5,207.3L222.5,207.9L222.5,208.7L223.9,208.5L224,209L221.1,210.3L220.5,211.9L219.4,211.7L219.3,213.1L218.6,213.2L218.6,212.7L217.4,213.7L217.3,213.1L216.3,213.6L215.1,216L213.6,216.8L212.8,219.4L210.8,219.2L206.9,220.2L205.5,223.8L204.7,224.3L202.1,224.4L201.5,226.9L200.7,227.5L198.6,227.7L198.5,226L197.5,224.9L195.8,224.4L194.1,224.7L193.9,226.2L192.7,226.1L191.2,227L188.7,225.5L186.9,227.1L184.3,222.3L182.5,221L178.4,221.8L177.4,224.7L175.7,225.7L172.8,225.1L167.2,225.6L166.1,224.4L166,223.2L163.5,222.5L163,221.2L158.9,220.4L159.1,218.4L161.7,216L164.9,214.8L164.9,213.9L166.9,211.9L171.3,210.2L171.2,209.5L172.4,208.8L173.2,209.1L173.9,207.8L173.7,207.4L166.5,209.7L164.7,211.2L164.9,209.4L165.9,208.7L166.4,207.3L166.2,205.7L165,205L164.2,202.9L166.6,199.7L168.8,198.9L170.1,197.4L172.5,192.9L175.5,192.4L175.4,191.2L177,189.3L177.9,191L182.2,186.7L189.7,186.6L191.5,184.2L193.8,183.2L194.6,181.7L194.7,181.6Z","type":"farm","terrain":"hills","owner":"crimson","core":false},{"id":29,"name":"江淮","kana":"こうわい","capital":"金陵","capital_kana":"きんりょう","capX":206.2,"capY":255.6,"cx":213.4,"cy":246.1,"path":"M219,254.8L219.3,255.5L218,254.9L218.3,253.9L217.1,253.1L218.3,253L219,254.5L219,254.8ZM211.9,219.6L210.8,220.6L210.8,223.9L212.7,223.2L213.8,223.6L216.3,226.1L223.5,228.8L225.2,234L226.5,235.6L226.2,236.7L228,238.8L228.4,240.5L229.4,241.2L229.2,242L230.1,242.8L230.3,244L231.1,244.2L231.2,246.6L230.4,248L233.6,250.4L237,251.7L237.4,253.3L236.7,253.6L237.1,254.3L242.2,256.9L243.5,259.6L242.8,260L240.4,259.6L235.8,257.6L233.7,258.7L232.1,258.5L230.1,256L228,255.4L226.3,255.4L223.6,256.9L222,257L220.4,256.1L218.6,252.8L215.9,252.1L216.7,252.8L215.8,254L216.8,253.5L217.8,253.9L217.7,254.8L220.5,256.9L223.2,257.4L226.1,256L229.4,256.6L230.3,258.4L229,258L229.2,258.6L234.1,260.1L236.5,262.4L234.5,262.9L233.9,264.9L233.1,265.1L233.1,266.4L230.8,266.6L231.1,268.3L228.7,268.5L228.9,269.7L226.3,271.1L225.7,269.4L222,268.9L219.4,266.3L215.4,266.7L212.9,266L212.7,264.8L206.2,265.5L205.4,264.3L207.1,262L206.9,260.8L205.9,260.2L204.7,260.5L204.7,259.8L202.3,258.8L202.2,257.7L200.8,256.9L202.7,254L204.6,253.3L204.6,250.9L203.7,250.5L203.3,249.3L207.4,249.3L209.5,251L210.9,249.3L210.4,246.5L208.4,244.8L206.8,244.7L205.2,247.6L201.2,247.6L200.2,247.1L199.4,245.5L200.2,244.8L199.2,242.2L198.7,241.9L197.6,242.6L195.8,241.6L197.3,238.7L198,238.7L198.7,236.1L198.4,235.4L193.4,235.7L193.6,234L193,233.9L192.3,232.5L185.1,230.6L184.1,227.8L182.4,227.8L177.3,224.9L178.4,221.8L182.5,221L184.3,222.3L186.9,227.1L188.7,225.5L191.2,227L192.7,226.1L193.9,226.2L194.1,224.7L195.8,224.4L197.5,224.9L198.5,226L198.6,227.7L200.7,227.5L201.5,226.9L202.1,224.4L204.7,224.3L205.5,223.8L206.9,220.2L211.9,219.5L211.9,219.6Z","type":"industry","terrain":"plains","owner":"crimson","core":false},{"id":30,"name":"滬浜","kana":"こはま","capital":"申城","capital_kana":"しんじょう","capX":238.0,"capY":265.5,"cx":235.8,"cy":267.3,"path":"M236.5,262.4L241,264.9L243.7,268.5L244,269.3L243.8,269.7L238.9,270.4L235.7,271.9L235.2,271L234,270.7L233.6,270.2L232.8,270.5L232.2,270.3L232.2,268.3L231.3,268.1L230.7,266.7L233.1,266.4L233.1,265.1L233.9,264.9L234,263.8L234.5,262.9L236.3,262.4L236.5,262.4ZM242.4,261L244.1,261.8L244,262.5L242.5,263L239.2,261.9L236.1,260.4L234.5,258.9L235,258.4L236.2,258.4L241,260.7L242.4,261ZM241.5,263.8L241.5,264.4L239.4,263L241.3,263.6L241.5,263.8Z","type":"tech","terrain":"coast","owner":"crimson","core":false},{"id":31,"name":"銭塘","kana":"せんとう","capital":"西湖","capital_kana":"せいこ","capX":222.9,"capY":276.6,"cx":228.1,"cy":289.4,"path":"M235.4,302.3L235.7,303L235.2,302.9L235.1,303.2L234.2,303.5L233.8,302.4L235.1,301.4L235.4,301.4L235.5,302L235.4,302.3ZM235.7,271.9L232.1,273.7L231.4,275.7L230.4,276.5L229.8,276.7L228.8,275.5L226.2,275.4L225,276.9L223.5,276.6L222.2,277.8L223.7,276.9L225,277.2L225.8,275.8L227.9,275.7L229.2,277.4L228,278.7L229.9,279.4L228.2,278.7L229.4,277.5L231.1,278.1L235.4,276L237.5,276.7L241,280.6L243.5,281.5L245.8,281.3L242.8,283.1L240.8,285.3L237.7,285.8L237.7,287.1L238.4,286.3L238.2,287.4L240.9,285.7L241.8,286.4L242.5,285.8L241.3,285.6L241.9,284.9L243.3,284.4L244,285L243.2,285.8L244,286.7L243.1,288.5L244.2,289L243.6,289.7L241.7,290.1L242.4,288.3L241.8,287.6L241,289.9L240.1,289.9L240,288.4L239.9,289.8L239.1,288.5L238.4,290L237.2,290.2L237.8,290.5L237.2,290.8L239.8,290.7L238.7,291.9L240.6,291.9L240.2,292.2L240.9,292.7L240.5,293.1L239.4,292.5L238.2,292.9L240.4,294.2L239.8,295.2L236.6,295.5L234.1,293.9L236,295.4L235.5,296L238.5,296.2L239.3,298L238.5,298.2L239.6,298.3L239.3,298.7L240.2,300L239.8,300.6L239.4,301L238.3,300L237.2,300.4L236.5,302.3L235.1,301.2L234.8,300.1L235.5,299.6L234.4,299.4L233.9,300.4L232.7,300.4L233.8,300.6L233.9,301.2L232,304.2L227.7,303.5L227.1,302.7L227.5,303.7L230.4,304.5L230.8,305.4L229.1,307.4L228,306.8L228.5,308.1L227.6,309.1L228.5,310.4L228,311.4L227,311.1L226.6,313.5L226,313.8L224.7,311.5L223.3,311L221.1,311.9L217.6,312.1L215.8,308L215,308L214.1,309.7L211.6,310.9L207.3,310.1L207.2,307.3L205.5,304.3L206.2,301.3L205.4,300.1L202.8,300.9L202,300.6L201.7,295.8L199.3,292.6L196.6,290.6L197.2,288.8L198.6,288.2L198.7,287.2L200.3,286.8L200.4,286.2L201.3,286.6L205.2,283.4L205.4,282.3L207.3,280.3L206.8,278.3L207.5,277.5L207.1,276.3L208,275.9L211.4,276.6L213.2,275.8L212.4,274L211.4,273.5L213,272L213.9,272.5L215.4,270.1L216.4,266.3L219.4,266.3L222,268.9L225.7,269.4L226.3,271.1L228.9,269.7L228.7,268.5L232,268.1L232.2,270.3L233.4,270.1L235.6,271.5L235.7,271.9ZM246,283.3L246.5,284.1L246.2,284.3L245.4,283.4L244.7,283.5L245.6,282.7L246,283.3L246,283.3ZM248.2,279.9L247.8,281L245.5,280L244.5,280.2L243.9,278.5L245.5,278.5L248.1,279.8L248.2,279.9Z","type":"industry","terrain":"hills","owner":"crimson","core":false},{"id":32,"name":"閩南","kana":"びんなん","capital":"榕沢","capital_kana":"ようざわ","capX":212.1,"capY":326.9,"cx":205.2,"cy":330.0,"path":"M190.3,354.6L191,354.8L190.5,355.2L190.4,355.7L189.7,355.9L189.9,356.7L188.5,356.8L189.4,355.5L188.8,355.4L189.2,354.5L190.1,354.8L190.3,354.6ZM212.2,327.4L213.4,328.1L211.6,327.8L211,326.7L211.8,327.4L212.2,327.4ZM225.5,313.5L223.9,313L224.2,312.1L222.8,312.4L222.6,313.4L224.6,313L225.5,314.2L223.4,314.3L223.5,316L222.2,316.2L223.1,316.9L220.8,317.1L222.2,319.3L221.5,320.4L218.5,321.5L221.3,318.3L219.6,318.4L219,320L218,319.7L218.6,317.7L217.6,319.1L216.7,318.2L217.2,319.5L215.8,318.4L215.1,318.9L215.7,321.1L217.9,321L218,322.9L216.3,321.9L215.3,322.4L216.7,324.1L218.4,322.8L219.9,323.5L216.1,324.8L214,328.1L209.7,326.1L212.7,328.6L214.7,327.3L216.8,327.8L215.3,329.4L215.6,331.6L213.9,331.6L216.4,335.5L215.5,335.7L215.4,334.2L214.3,335.3L214.6,334.1L213.9,334.6L212.2,332.6L209.8,334.8L210.9,336.6L211.9,335.8L212.7,336.9L209.9,337.2L209.7,338.4L208.9,338.1L209.4,337.2L208.2,337.1L208.9,336.5L207.1,336.9L208.2,337.6L206.7,338.9L208.6,339.2L208.8,340.3L207.5,340.3L208,341.3L205.2,341.6L204.6,340.3L204.6,341.3L203.4,341.2L204.2,342.5L205.7,342.6L204,345.2L203.2,345.5L201.8,343.4L201.5,344.5L199.2,345.2L198.5,343.4L196.3,345.1L197.3,345.5L196.9,346.4L194.1,346.1L197.1,346.9L196.8,347.8L198.1,348.6L195.5,349.5L195.4,351.2L193.6,352.8L194.2,351.4L192.7,350.9L191.8,354.8L191.5,352.9L189.7,352.3L190.7,353.2L190.2,354.2L188,354.3L188,356L187.5,355.4L186.8,356.3L185.1,354.8L184.3,349.2L181.7,345.3L182,343.8L179,344.4L177.3,341.7L171.1,340.3L170.9,337.5L172.5,335.8L174.4,329.4L176.7,328.3L177.5,324.4L179.9,323L178.8,319.6L179.3,317.5L185.2,314.6L186.6,312.6L186,309.3L188.2,305.6L190.9,304.3L193.6,306.2L194.4,304.8L201,302.9L201.5,300.8L205.4,300.1L206.2,301.3L205.5,304.3L207.5,310.2L211.6,310.9L215.8,308L217.6,312.1L223.3,311L224.7,311.5L225.4,313.5L225.5,313.5ZM218.6,333.4L218.1,333.6L218.6,334.3L217.7,334.4L217.6,335L216.8,334.6L217,334L216.5,334L217.8,333.6L217.2,333.5L217.2,332.7L216.8,332.7L217.6,331.9L218.8,333.3L218.6,333.4Z","type":"port","terrain":"mountains","owner":"crimson","core":false},{"id":33,"name":"粤江","kana":"えつこう","capital":"羊城","capital_kana":"ようじょう","capX":140.1,"capY":362.1,"cx":137.7,"cy":367.6,"path":"M151.1,368.9L147.6,370.1L146.1,366.6L144.8,366.5L144.7,363.2L144.2,364.6L144.4,363.2L143.9,364.4L143.4,362.9L146.7,362.1L142,362.5L142.8,364.5L139.6,364.8L142.9,366.3L141.6,366.4L144.2,368.7L144.1,372.7L142.5,373.7L139,368.7L141.8,373.4L138.9,375.2L138.1,373.1L137.3,376.1L136,377.3L135,375.9L131.7,378.2L130.2,377.4L131,375.9L129.8,376.1L129.9,374.7L129.8,378.4L128.5,379L127.3,378.5L127.4,377.4L125.5,378L125.6,376.9L124.8,377.7L123.8,376.4L125.1,378.2L123.6,379.4L123.2,378.3L121.3,378.1L122.6,380.1L120.7,381.1L118.9,381.3L118.4,380.3L116.4,382.2L116.8,381.5L114.3,381.8L113.5,381L113,382.2L114,381.8L113.1,382.4L110.4,382.7L109.1,384.4L108.9,383.1L110.4,382.2L108.9,382.9L108.9,384.7L106.4,385.2L107.1,383.5L105.6,382.3L106.1,385.4L103.6,386.6L103.2,389.3L105.7,389.3L106.2,390.4L105.4,389.6L104.9,391.6L107.7,393.7L104.6,396.4L100.3,396.5L99.7,394.5L101.1,395.2L101.4,394.2L99.2,393.2L98.3,391.4L99.6,390.9L98.8,391.1L97.3,388.3L98.5,383.2L100.4,383.1L100.7,382L99.1,382L98.3,379.7L100.2,379.4L101,377.1L105.7,376.8L105.3,373.3L108.8,373.5L110.5,372.2L109.3,369.8L110.2,368.7L113.6,367.9L113.8,366.8L117.4,364.7L117.6,359.5L118.8,356.4L120.6,355.6L121.1,353.6L122.6,353.6L124,351.7L123.5,349L125.7,347.5L124.3,343.4L126.8,342.3L127.4,337.4L132.6,338.2L135.6,340.5L136.9,340.2L137.4,337L135.7,336.9L135.3,335.9L139.6,333.8L143.8,335.9L149.1,334.6L149.2,336.6L155.5,334.8L157.5,336.4L157.7,338.4L153.9,340L151,343.7L153.8,345.7L165.9,342.3L169.1,345.2L170.4,345L169.9,341.9L171.5,340.8L177.2,341.7L179,344.4L182,343.8L181.7,345.3L184.3,349.2L185.1,354.8L186.8,356.3L185.7,357.1L185.5,355.9L183.7,355.7L182,359.5L179,358.6L182.4,360.8L180.7,360.3L180.5,361.7L178.9,360.8L180,361.1L178.7,364.3L175.3,363.8L176.2,364.1L174.3,365.6L173.3,364.4L173.7,365.2L170.7,366.6L169.2,365.4L169.6,364.4L167.6,365.4L165.7,364.5L168.2,365.3L167.2,366.4L167.7,367.6L165.2,367.2L165.8,366.1L163.7,366.1L164.7,364.8L160.6,367.3L159.2,366.4L160.5,367.5L159.6,369L157.8,368.3L158.3,365.8L155.2,367.1L156,367.9L154.9,368.8L156.3,369.4L155.1,370.1L153.8,368.3L151.3,368.9L151.1,368.9ZM124.7,379.6L125.1,379.7L125.1,380.1L122.9,380.7L123.2,379.8L124.6,379.6L124.7,379.6ZM135.2,378.2L135.4,378.6L134.6,379L134.8,380.4L134.2,380.5L133.9,380L134.4,379.2L133.6,379.4L133.6,379.1L134.4,378.2L135.3,378.2L135.2,378.2ZM144.1,366.2L144.1,366.5L143.7,366.5L141.8,364.8L142.9,364.9L144.1,366.1L144.1,366.2ZM185.6,358L186.2,357.9L186.2,358.9L184,358.5L185.5,358L185.6,358ZM107.8,387L107.5,388.2L106.6,387.4L104.2,387.6L104.2,387.1L104.7,387.1L104.6,386.7L105.3,386.7L104.7,386.6L105.9,386.3L106.3,387L107.3,386.5L107.8,386.8L107.8,387ZM108.6,385.2L107.8,386.2L106.3,385.3L107.8,385L108.1,385.2L107.9,385.6L108.6,385.1L108.6,385.2ZM143.6,366.7L144.6,367.7L144.7,368.4L142.7,367L143.3,366.7L143.6,366.7Z","type":"tech","terrain":"hills","owner":"crimson","core":false},{"id":34,"name":"琼崖","kana":"けいがい","capital":"琼港","capital_kana":"けいこう","capX":105.1,"capY":399.0,"cx":100.0,"cy":407.9,"path":"M113.3,403.2L113.6,403.7L112.8,403.7L111.7,404.9L111.1,404.5L111.1,404.1L111.6,404.1L110.9,404L110.8,405.5L109.3,406.8L109.4,407.3L108.9,407.6L108.2,409.5L107,409.3L107.3,409.7L107.8,409.6L107.9,410.3L108.2,409.5L107.4,412.4L106.4,413.4L107.2,413.8L107.3,412.7L107.7,413.9L106.9,414L106.3,415.2L105.3,415.2L106.2,415L106,414.8L104.5,415.3L102.3,417.2L101.7,417.1L102.3,417.5L101.8,418.7L100.9,418.6L101.5,418.4L101.5,417.9L99.3,418.7L98.3,418.5L98.1,420L97.4,420L98.2,420.2L97.8,420.8L97.4,420.3L96.5,420.8L96.7,421.1L96.1,421.2L96.1,420.2L95.7,420.7L95.1,420.9L95.5,420.4L94.9,419.9L93.3,419.6L91.3,419.8L91,418.9L89.3,418.8L86.9,417.4L85.6,417.1L85.7,414.6L84.9,413.1L85.3,412L84.8,410.1L85.6,409.4L85.4,408.8L84.9,408.7L84.9,408L85.6,406.8L86.6,406.7L88.5,405.3L88.7,405.4L89.5,404.2L91.2,403.6L91.9,402.7L93,402.8L92.7,402.3L93,401.9L92.6,401.9L91.3,402.7L91.4,401.7L92.4,400.6L93.1,400.3L93.2,400.7L94.7,400.9L94.9,401.4L96.3,401.1L95.6,400.8L95.5,400.5L96,400.4L95.7,400L97.9,399.3L97.9,399.9L98.2,399.6L99,400L99.2,399.6L99.3,400.2L99.9,399.6L100.6,399.5L101,400.2L100.7,400.2L101.2,400.5L101.5,399.9L102.8,399.7L103.1,399.3L102.1,399.6L102.8,399.2L103.2,398.6L104.4,399L105.4,398.7L106.3,400.3L105.9,398.4L107.8,399.5L108.1,399.4L108.5,400.3L108.7,399.7L108,398.6L109.4,397.4L109.8,398.5L110.7,399.3L112.4,399.4L113.2,403.1L113.3,403.2Z","type":"port","terrain":"island","owner":"crimson","core":false},{"id":35,"name":"華嶺","kana":"かれい","capital":"雨港","capital_kana":"うこう","capX":612.0,"capY":418.1,"cx":614.8,"cy":413.7,"path":"M613.9,394L684.2,394L684.2,426.2L685.4,427.7L685.8,428.9L685.2,429.6L686.2,430.9L660.1,430.9L658.9,431.5L653,431.8L643.3,434.4L640,434.2L636.7,435.3L633.5,435.6L632.1,434.5L625.7,434.3L619.9,436.2L614.3,435.2L613.2,431.2L611.2,429.2L609.4,428.6L607.1,429L605.2,427.6L602.3,427.1L600.1,427.9L598.7,427.1L597.6,427.6L597.7,422.8L598.3,426.2L599,426.2L599.4,425.5L600.5,425.8L599.3,425.1L599.8,424.2L599,423.2L599.8,423.5L599.6,422.5L601.4,422.5L599.7,421.7L598.8,421.8L598.8,422.3L597.4,421.7L596.9,419.8L598.2,420.7L597.9,419.9L600.8,419.1L597.1,418L596.7,418.3L597.2,419.4L596.3,419.5L595.9,415.8L594.6,414.2L593.3,409.4L591,407.8L590.2,406.4L589.5,404.2L590.4,402.3L589.5,401.5L598.9,404.2L606.8,404.9L609.5,404L608.8,404.4L610.7,405.8L610.8,405.1L611.7,405.1L612.4,406.3L613,405.8L612.3,405L613.6,404.5L613.4,405.3L615.5,407.8L613.3,410.2L613.2,408.2L612.8,408.9L612.6,408.4L612.8,409.4L608.8,414.2L612.8,413.3L609.4,413.8L611.5,411.2L613.7,410.3L615.3,408.2L616.1,408.5L615.6,406.9L616.3,407.2L617.4,409.3L615.8,410.1L615,409.6L615.8,411.4L614.6,410.9L615.3,411.5L614.7,412.1L616.3,411.4L616.9,412.2L615.9,414.4L616.1,415.3L614.7,414.9L615.3,413.6L614.2,414.4L613.6,416.5L613.2,413.7L611.3,416.4L609.8,417L610.6,417L609.8,417.4L611.7,416.4L610.7,417.6L611.6,417L612.1,418L612,417L613.1,416.5L614.2,417.5L616.1,416L616.5,414.7L617.8,415.3L619.1,414.2L618.1,411.5L618.9,411.2L617.8,410.5L618.4,409.7L618.1,408.7L619.2,407L620.8,405.9L618.9,405.2L618.5,403.6L617.8,403.4L617.4,404.3L618.8,405.6L617.1,404.7L616.6,403.2L618.2,403.4L618.4,402.5L616.2,400.9L614.8,401.2L614.5,400.1L615.3,399.9L617,400.7L617.1,399.7L616.1,399.1L617.7,399.1L616.7,397.7L616.9,396.9L616.1,396.6L614.9,397.2L615,396.7L613.7,395.5L614,395L613.2,394.8L614,394.2L613.9,394ZM617.8,413.3L618.6,413.9L617.4,414.4L617.7,413.7L617.4,413.7L617,414.4L616.6,414.3L616.9,412.8L617.5,412.4L617.7,413.2L617.8,413.3ZM618.7,406.5L618.9,406.9L618.4,407.4L617.8,407.4L617.3,406.4L616.6,406.7L616,406.2L615.6,405.4L615.7,404.4L614.9,404.4L614,403.7L613.9,403.2L615,401.5L615.8,401.3L616.8,402.6L615.8,402.5L615.4,403L615.2,402.7L615.1,403.2L614.2,403.4L616,403.9L616.5,406.2L616.8,405.2L618.6,406.3L618.7,406.5ZM612.5,400.2L613.2,400.6L612.9,401.1L611.6,400.6L611.9,399.5L612.3,399.3L612.5,399.8L612.5,400.2ZM610.6,400.1L611.3,400.7L609.1,400.2L608.6,398.9L609.6,398.8L611.1,399.7L610.6,400L610.6,400.1ZM614,398.1L613,398.8L612.1,397.6L611.9,398.2L612.5,398.9L611.6,399L611.1,398.4L610.9,398.9L610.5,398.7L611.7,397.5L612.6,397.5L614,398.1Z","type":"tech","terrain":"mountains","owner":"amber","core":false},{"id":36,"name":"杉原","kana":"すぎはら","capital":"杉沢","capital_kana":"すぎさわ","capX":610.3,"capY":444.0,"cx":622.7,"cy":445.9,"path":"M592.4,468.7L593.4,466.3L593.6,464L594.3,463.5L594.6,464.2L594.7,463.5L595.6,462.6L595.9,463.3L596.8,463.2L596.2,463L596.1,462.3L594.4,463.4L595.9,459.8L596.8,458.8L597.6,459.1L596.7,458.6L596,459.5L597,455.5L597.1,451.7L597.5,450.5L597.8,450.2L598.3,450.5L597.9,450L597.5,450.3L597.5,449.4L597.7,448L598.4,448L597.7,447.9L597.6,447.2L597.7,445.4L598.3,444.3L598.3,442.4L598.9,441.3L599,439.5L598.5,439L599,438.1L599,438.6L599.5,438.1L598.9,437.7L599.1,436.4L599.3,437.1L599.9,437.4L599.8,436.3L599,436.1L599.5,434.7L600.1,434.6L599.5,434.5L599.3,435.1L599.2,434.3L598.7,433.9L599,432.5L598.6,431.7L599.5,430.7L598.3,428L600.5,428.9L601,429.6L601.2,429.1L600.2,428.6L601.4,428.4L602.1,428.8L604.4,428L606.1,429.1L607.9,429.2L609.4,428.6L611.2,429.2L612.1,429.8L613.2,431.2L613.8,434.6L614.3,435.2L619.9,436.2L625.7,434.3L632.1,434.5L632.9,434.8L633.5,435.6L634.9,435.2L636.7,435.3L640,434.2L643.3,434.4L648.6,432.9L651.9,432.5L653,431.8L658.9,431.5L660.1,430.9L686.2,430.9L686.7,432L687.7,432.9L690.1,433.7L691.3,435.3L691.3,436L689,439L688.2,441.4L686.8,442.9L686.7,444.4L685.7,445.6L684.3,446.5L683.2,448.7L682.2,449.6L682.3,451.9L683,452.3L683.5,451.9L684.2,452.3L684.9,452.2L686,453.4L685.7,454.2L685.1,454.3L685.5,455.3L684.9,457.1L684.3,457.6L684.5,480.2L595.9,480.2L594.1,478.8L593.2,476.1L593.1,474.8L593.6,472.6L592.7,471.2L592.2,471L591.5,469.9L591.8,469.8L592.4,468.7Z","type":"farm","terrain":"hills","owner":"amber","core":false},{"id":37,"name":"金浜","kana":"きんはま","capital":"桜都","capital_kana":"おうと","capX":629.4,"capY":522.3,"cx":641.0,"cy":546.6,"path":"M712.7,594.6L683.2,596.8L682.9,595.4L681.9,594.8L682.6,594.8L683.3,596L683.1,594.9L682.6,594.4L681.6,594.9L680.7,589.7L678.4,586.9L670.9,581.9L669.3,581.6L668.8,582.4L667.3,581.9L667.6,580.8L666.1,578.5L662.5,578.7L658.5,577.5L657.4,576.9L656.6,575.4L653.1,573.6L649.3,573.7L646.1,572.9L642.2,573.3L641.5,572.3L639.9,571.8L640.3,570.1L640.2,568.2L639.5,567.6L639.8,564.7L637,563.7L637.1,562L637.5,562.3L636.8,561.1L635.4,560.7L633.4,558.6L631.9,558.2L629.2,554.1L624.4,550.3L623.9,547.2L623.4,546.9L623.9,546.2L624.7,546.6L625.5,545L626,545.2L625.5,543.8L624.3,542.2L621.5,542.2L619,540.3L618.1,539.4L617.6,535.9L616.7,535.2L616.8,532.2L618,531.8L618.8,532.8L618.3,533L618.5,534.3L621.9,536.2L622.7,536.1L620,532.9L620.5,532.4L619,532.1L619.3,530.9L617.8,529.9L618.6,529.3L620.3,528.7L626.9,529.3L626.6,529.1L628,528.2L627.9,529.2L628.4,528.6L630,529.4L628,528.1L625.9,529L627,527.7L624.4,528.8L622.5,527.8L621.5,528.9L618.2,527.6L617,528.1L616.9,529.2L617.7,529.6L616.9,530.4L617.7,530.9L617,530.8L617.3,531.5L616.6,531.7L611.6,528.6L611.3,529.6L610.5,529.5L611.4,527.7L610.9,526.5L612.9,528.3L610.8,525.8L610,525.8L609.2,523.9L606.7,522.5L601.9,518.1L602.3,516.8L600.7,512.9L601.3,510.2L600.3,506.9L597.1,503.5L594,501.6L593.5,499.4L595.5,495.5L595.7,496.4L596.3,495L597.5,494.4L596.6,494.2L595.6,495.4L597.2,492.3L596.5,490.9L597.7,487.1L596.5,483.4L595.3,482.9L595.9,480.2L647.8,480.2L647.8,517.1L670.8,533.3L713.9,566.4L714,567.9L715.6,569.5L717.1,572.9L720.2,575.1L716.9,577.2L715.3,579.2L715.6,582.1L715.1,584L713.9,585.7L712.7,586L712.7,587.1L713.4,588.5L713.1,590L715.5,590.8L716,592.8L715.1,594.3L712.8,594.5L712.7,594.6ZM668,593.2L667.1,593.5L666.3,592.9L664.9,590.7L665.4,590.8L667.7,592.9L668,593.2ZM666,585.9L665,585.2L665.8,585.2L667.8,586L668.6,587.2L666.7,587.1L666.1,585.8L666,585.9ZM647.2,578.3L647.2,578.7L648,578.9L648.1,579.5L646.4,580L644.7,578.7L647,578.3L647.2,578.3ZM653.6,578.4L653.2,578.8L650,579.2L649.3,579L649.3,578.3L648.6,578L648.8,577.8L650.7,578L652.3,578.6L653.1,578.1L653.7,578.3L653.6,578.4Z","type":"tech","terrain":"coast","owner":"amber","core":true},{"id":38,"name":"銀砂","kana":"ぎんさ","capital":"砂都","capital_kana":"さと","capX":650.6,"capY":515.2,"cx":709.0,"cy":543.5,"path":"M721.1,480.2L721.1,551.4L720.1,553.5L719.7,553.7L718.5,553.7L717.1,552.3L716.2,552.5L714.8,552.1L712.8,553L712.5,554.3L713.4,555.6L713.1,557L713.7,558.6L713.4,560L714.4,562.1L714.6,563.8L714.5,564.6L713.8,564.7L714.1,565.4L713.8,565.8L713.9,566.4L670.8,533.3L647.8,517.1L647.8,480.2L718.8,480.2L721.1,480.2Z","type":"fortress","terrain":"desert","owner":"amber","core":false},{"id":39,"name":"薯原","kana":"しょげん","capital":"渓都","capital_kana":"けいと","capX":694.6,"capY":460.2,"cx":714.7,"cy":436.9,"path":"M684.2,394L696.4,394L696.4,406.2L700.5,410L701,411.1L700.3,411.7L701.5,412.7L700.4,413.1L702.1,413.8L703.1,414.8L705.2,415.3L708.7,418.6L710.3,419.5L710.5,420.5L712.2,421.3L712.3,422.1L713.5,421.7L714,422L713.8,422.6L714.7,423L717.6,422.6L717.5,424.3L716.7,424.7L717.1,425.3L716,427.6L716.3,428.5L715.4,428.9L716.1,429.6L715.8,430.7L716.7,431.1L716.5,431.8L716.9,432.3L715.5,432.8L714.9,433.6L715.6,434.5L714.9,436.2L718.1,437.2L718.9,436.5L720.3,436.2L721.7,435.2L721.8,434.6L724.1,435.7L724,436.6L724.6,437L724.5,437.8L725.2,438.5L725.1,439.3L726.7,440.7L727,441.6L727.8,441.8L728.6,443L728.5,443.7L728,444L728.5,444.8L729.8,445.8L731.1,445.4L732.3,446L733.4,447.5L733.1,448L734,449L734.1,449.9L735.9,450.9L736.3,450.8L736.1,450.2L737,449.5L737.9,449.3L741.5,449.9L742.2,449L743.3,448.5L745.3,448.9L747.9,448.6L748.6,449L750.4,448.5L752.9,448.8L752.4,448.3L752.5,447.6L753,447.3L752.9,446.7L754,446.2L754.8,446.5L756,448.2L757.2,449.2L758,449.4L758,480.2L684.5,480.2L684.3,457.6L684.9,457.1L685.5,455.3L685.1,454.3L685.7,454.2L686,453.4L684.9,452.2L684.2,452.3L683.5,451.9L683,452.3L682.3,451.9L682.2,449.6L683.2,448.7L684.3,446.5L685.5,445.8L686.7,444.4L686.8,442.9L688.2,441.4L689,439L691.4,435.8L690.3,433.8L687.7,432.9L686.7,432L685.9,430.3L685.2,429.6L685.8,428.9L685.4,427.7L684.2,426.2L684.2,395.8L684.2,394Z","type":"farm","terrain":"mountains","owner":"amber","core":false},{"id":40,"name":"蒼穹","kana":"そうきゅう","capital":"丘都","capital_kana":"きゅうと","capX":745.8,"capY":423.6,"cx":728.0,"cy":433.9,"path":"M696.4,394L844.2,394L844.3,443.2L758,443.2L758,449.4L757.2,449.2L756,448.2L754.8,446.5L754,446.2L752.9,446.7L753,447.3L752.5,447.6L752.4,448.3L752.9,448.8L750.4,448.5L748.6,449L747.9,448.6L745.3,448.9L743.3,448.5L742.2,449L741.5,449.9L737.9,449.3L737,449.5L736.1,450.2L736.3,450.8L735.9,450.9L734.1,449.9L734,449L733.1,448L733.4,447.5L732.3,446L731.1,445.4L729.8,445.8L728.5,444.8L728,444L728.5,443.7L728.6,443L727.8,441.8L727,441.6L726.7,440.7L725.1,439.3L725.2,438.5L724.5,437.8L724.6,437L724,436.6L724.1,435.7L721.8,434.6L721.7,435.2L720.3,436.2L718.9,436.5L718.1,437.2L714.9,436.2L715.6,434.5L714.9,433.6L715.5,432.8L716.9,432.3L716.5,431.8L716.7,431.1L715.8,430.7L716.1,429.6L715.4,428.9L716.3,428.5L716,427.6L717.1,425.3L716.7,424.7L717.5,424.3L717.6,422.7L714.7,423L713.8,422.6L714,422L713.5,421.7L712.3,422.1L712.2,421.3L710.5,420.5L710.3,419.5L708.7,418.6L705.2,415.3L703.1,414.8L702.1,413.8L700.4,413.1L701.5,412.7L700.3,411.7L701,411.1L700.5,410L696.4,406.2L696.4,395.5L696.4,394Z","type":"farm","terrain":"plains","owner":"amber","core":false},{"id":41,"name":"泉原","kana":"せんげん","capital":"風都","capital_kana":"ふうと","capX":834.7,"capY":490.8,"cx":786.9,"cy":476.1,"path":"M758,492.5L758,443.2L844.1,443.2L844.1,492.5L759.5,492.5L758,492.5Z","type":"oil","terrain":"mountains","owner":"amber","core":false},{"id":42,"name":"南氷","kana":"なんひょう","capital":"氷港","capital_kana":"ひょうこう","capX":165.7,"capY":566.6,"cx":174.6,"cy":565.9,"path":"M181.5,555.8L185.8,556.8L186,557.4L184.8,557.3L187,557.9L182.5,557.1L184.5,558.2L186.4,558.3L186.2,559.4L184.8,560.3L187.2,560L185.6,560.5L186.8,560.8L186.1,561.3L183,561.3L186.5,561.6L185.5,562.5L181.9,562.3L184.9,562.6L185.6,563.3L184.4,564L181,563.7L184.2,564.1L184.7,564.5L181.3,564.4L184.4,565L178.9,564.9L184,565.2L184.2,565.6L183.4,565.5L183.9,566L182.4,566.2L179.6,565.9L183.4,566.7L179.4,566.5L183.6,567.1L181,567.5L183.7,567.3L181.5,567.8L183.3,567.9L181.5,568.1L182.1,568.3L180.7,568L181.5,568.5L181.1,568.5L179.3,568.1L178.5,567.1L178.9,568L175.7,567.8L177.9,568.7L178.1,568.2L180.6,568.7L179,569.4L181.4,568.9L180.3,569.1L181.8,569.8L180.5,569.9L181.5,570L181.1,570.4L181.8,570.6L175.9,570.2L176.8,569.4L176.2,569L176.3,569.5L175.2,569.3L175.3,570.1L173.5,571.2L173.1,570.6L172.3,571L172.1,570.3L171.6,570.6L172.1,571L170.3,570.7L172.6,570L172.1,569.9L174.2,568L171.9,569.9L170.2,570.4L173.3,567L170.2,568.7L169.6,568.6L170.8,567.5L168.4,568.4L170.5,567.1L169.3,567.1L168,568.5L167.5,568.2L167.9,567.9L167.1,567.9L167.7,567.5L166.3,568.3L165.7,567.9L168,567.2L166.4,567.3L169.8,566.1L169,565.5L167.2,566.9L166.2,566.9L166.7,566.4L164.4,566.9L168.4,565.7L170.1,564.5L169.2,565.1L168.3,564.2L168.5,565L167.6,565.5L165.2,565.9L167.8,564.8L166.4,564.4L167.2,563.8L165,564.2L166.6,564.7L164,565.2L164.8,565.6L163.3,565.1L162.6,565.8L162,565.7L162.4,566.1L160.7,565.9L161.7,566.2L160.9,566.7L160.2,566.6L160.9,566.2L159.8,566.5L160.6,566L159.9,565.7L155.3,566.3L158.3,566.4L157.6,566.5L153.2,566.6L176.8,555.9L180.5,555.9L181.5,555.8ZM162.6,566.7L160.9,566.9L164.5,565.9L164.7,566.1L162.6,566.7L162.6,566.7ZM178.4,571.7L178.7,572L177.9,572.2L177.9,571.8L177.3,572.3L177.2,571.7L176.7,572.2L176.1,572.1L177,571.3L178.1,571.6L178.4,571.7ZM181.4,570.7L181.6,571L181.1,571.2L179.1,570.7L179.6,570.9L179.1,571.6L178.6,571.1L178.3,571.4L177.2,571.1L178.3,570.8L177.2,570.9L176.1,570.4L178.9,570.5L181.4,570.7ZM156.1,566.9L156.4,566.9L155.1,567.4L155.1,567.1L154.1,567.3L153.2,566.7L154.9,566.5L155.8,566.6L155.5,567L156,567L156.1,566.9Z","type":"port","terrain":"ice","owner":"amber","core":false},{"id":43,"name":"氷都","kana":"ひょうと","capital":"白都","capital_kana":"はくと","capX":136.3,"capY":547.8,"cx":193.7,"cy":541.7,"path":"M266.2,509.3L267.9,510.2L263.5,510L266.2,510.7L259,513.3L275.1,513.4L262.5,515L268.7,515.7L280.7,513.2L298.7,514.8L288.4,516.9L290.3,517.6L286,517.7L287.5,518.7L275.1,522.9L258.1,525.5L255.3,524.3L252.9,525.2L254.3,526L245.8,526.2L240.8,523.2L243.3,527L236.8,528.3L235,531.8L228.7,535.7L222.2,535.3L223.6,537.1L215.6,538.7L215.3,537.4L214.5,539L210.9,538.4L214.6,535.9L209.4,535.6L211.9,536.3L210,538.2L207.4,537.7L209.6,538.9L208.8,539.8L202.7,539.2L203.4,540.1L197.8,540.5L200.2,541.1L199.4,542.8L192.8,542.7L197,546.9L190.3,547.4L195.9,548.3L194.3,549.2L196.2,550.4L190,550.1L194.9,551.2L190.2,551.7L192.8,552.7L188.4,551.8L191,553.8L186.7,553.8L189.3,555.3L176.8,555.9L156.2,565.4L152.3,565.7L155.4,565.3L153.3,564.6L155,563.8L152.3,564.8L151,564.3L152.6,563.5L148.6,563.3L152.6,562.2L147.3,562.5L151.2,562L148.1,561.5L150.2,560.1L146.6,561L148.9,558.9L145.4,560.1L147.3,558.5L141.6,557.2L145,554.1L141.3,555.6L142.6,554.3L140,553.9L143.1,553.2L137.3,552.6L141.9,552.2L136.6,552L140.6,550.7L135.5,551.5L134.9,550.2L138.3,549.2L134.2,548.8L143.1,547.8L133.6,547.9L142.4,546.4L138.3,545.5L140.7,544.9L145.7,547L142.2,544.9L143.4,544.1L140.4,544.6L138.7,542.6L142.8,541.3L176.8,541.3L176.8,509.9L266,509.3L266.2,509.3ZM275.9,507.2L278.4,507.3L280,507.9L280.1,508.4L279.6,508.8L278.1,508.5L279.2,508.9L276.8,509.6L272.3,510.3L268.5,510.3L267.1,509.2L275,508L275.9,507.2L275.9,507.2ZM296.2,504.9L292.8,506.3L296.8,505.5L295.5,506.2L295.8,506.7L297.9,505.7L299.7,505.8L297.9,506.4L298.6,506.5L298.3,506.7L296.6,506.7L296.1,507.3L296.6,508.1L296.5,508.5L296.9,508.5L297.5,507.5L300.4,507.1L299.8,507.4L301,507.7L299.9,508L301.3,508.1L299.3,508.4L300.6,508.5L301,508.9L300.7,509.2L300,508.9L300.7,509.3L297.3,509.6L300.9,509.6L300.9,509.8L299.2,510.1L301.5,510.2L300.5,510.7L300.8,510.9L300.5,511.1L299.5,511L301.2,511.1L300.3,511.4L301.6,511.6L300.4,511.6L301.5,511.8L300.4,512.2L302,512.5L301.7,512.7L299.5,513.3L299.1,513.2L299.4,512.9L299,512.7L297,513L296.5,511.8L296.7,510.9L296.5,510.7L295.5,511.5L296,512.3L295.6,513L291.6,513.1L287.6,511.7L286.8,510.7L286.8,509.8L284.3,508.4L284.4,507.9L281.9,508.3L280.2,507.5L283.2,507.8L283.9,507.7L283.7,507.3L284.8,507.6L285.1,506.6L284.5,506.4L285.3,506.5L285.1,506L286.1,505.2L291.2,504.8L295.8,504.9L296.2,504.9ZM138.8,543.4L139.4,543.4L139.5,543.9L139.1,544L139.7,544.1L139.4,544.5L139.8,544.7L137,545.5L136.6,545.4L137.6,544.5L136.4,544.7L135.3,546.1L133.9,546.8L134.1,547.2L133.2,547.6L131.5,547.7L131.7,546.7L131.2,546.3L132.1,546.1L131.5,545.8L133.8,545.4L135.3,544L137.6,543.9L138.8,543.4L138.8,543.4ZM138.9,546L137,547.5L136,547.5L136.9,547.2L136.7,547L137.1,546.7L136.8,546.7L137.7,545.8L138.8,545.8L138.9,546ZM136.2,546.8L135,546.7L136,546.4L136.4,545.8L137.3,545.7L136.4,546.7L136.2,546.8ZM187.7,555.7L188.6,555.9L185.7,556.2L185.4,555.8L185.9,555.5L188,555.7L187.7,555.7ZM192.6,552.9L192.9,553.2L192.1,552.8L192.2,553.2L191.5,552.9L191.1,553.2L188.6,551.8L189.7,551.7L191.1,552.3L191,552.5L192.4,552.7L192.6,552.9ZM195.3,547.7L195.6,547.6L193.1,547.6L194.4,547.1L195.2,547.2L194.9,547.6L195.3,547.6L195.3,547.7ZM198.2,546.2L197.9,546.5L196.3,546.2L195.7,544.9L194.2,543.9L195,543.7L196.2,544.3L196.6,544.8L196,544.9L196.9,545.5L196.3,545.4L196.4,545.7L198,546.1L198.2,546.2ZM213.2,538.9L212.9,538.9L213.4,539.2L212.9,539.3L213.9,539.6L212.4,540L211.7,539.7L212.2,540L211.6,540.2L210.7,540.1L210.2,539.5L210.4,538.9L211.8,538.3L214.2,539.1L213.3,539L213.2,538.9ZM267.3,511.4L267.3,510.6L270,510.5L267.4,511.4L267.3,511.4ZM280.7,511.4L280.8,511.9L276.9,512.5L275.5,512.2L265,512.9L265.8,512.6L265.4,512.3L265.9,512L267.7,511.8L270.5,510.6L275.2,510.3L278.5,509.5L278.4,510L280.2,510.4L280.1,510.8L280.5,511L279.8,511.2L280.6,511.3L280.7,511.4Z","type":"tech","terrain":"ice","owner":"amber","core":false},{"id":44,"name":"中氷","kana":"ちゅうひょう","capital":"氷沢","capital_kana":"ひょうざわ","capX":123.0,"capY":532.5,"cx":131.3,"cy":536.9,"path":"M132.1,545.6L131.5,545.7L131.4,545.4L132,545.4L131.5,544.9L133,544.3L134.9,544.1L136.5,543.2L133.9,543.9L134.8,543.4L134,543.2L133.2,543.8L133.6,544.1L131.7,544.4L132.6,544L132,543.7L131.3,544.4L131,544.3L131.4,544.1L131.1,543.8L132.2,543.4L131.4,543.3L130.8,542.8L131.7,542.6L131.1,542.3L132.3,541.6L130.7,542.2L131.2,541.5L130.5,541.7L130.4,541.4L129.3,542.3L129.8,541.8L129.2,541.4L133.8,540.1L132.8,539.9L135.1,539.2L137.7,539.1L140.4,539.5L139.1,539.4L139.7,539.2L138.2,539L135.4,539L132.3,539.6L132.7,540.1L132.3,540.4L129.5,541.1L129.2,540.9L129.8,540.4L128.9,540.6L129.7,539.6L128.4,540.5L127.9,540.3L128.6,539.9L127.8,540L129.2,539.6L128,539.8L128.7,539.4L128.4,538.8L127.7,539.6L125.4,539.5L127.3,538.8L125.2,539.2L128.4,538.1L130.6,538.7L131.1,538.4L131,538.1L132.4,537.7L133.7,538.1L133.1,537.6L133.8,537.3L131.1,537.8L130.6,538.3L129.3,538.3L129,538.1L129.4,537.8L129.2,537.7L127.8,537.8L127.9,538.1L125.9,538.5L125.2,538.2L127.4,537.6L124.7,538.1L124.1,537.9L126.1,537.6L124.1,537.6L130.3,535.3L132.4,535L132.1,534.8L133,534.2L135.4,533.8L134.9,533.6L136.3,533.1L141.6,533.1L139.1,533L137.8,532.7L138,532.6L139.8,532.1L143.4,532.3L139.9,532.1L141.6,531.8L136.9,532.6L132.4,534.1L131.5,534.9L126.7,536.7L124.7,537.1L123.1,537.1L124,536.9L123,537L123.8,536.5L126,536.2L123.2,536.4L122.8,535.8L123.9,535.1L123.1,535.4L123.3,534.9L130,534.7L125.5,534.7L124.4,534.6L124.9,534.3L124.2,534.2L129,533.8L125.6,533.6L128.7,533.3L126.1,533.5L126.7,533L131,533.1L129.7,532.9L130.6,532.8L129.5,532.7L129.8,532.3L127.8,532.8L122.9,532.7L122.1,532.2L125.5,532.2L123.3,532.2L122.1,531.8L124.5,531.6L121.4,531.8L122,531.2L131.2,530.1L134.8,530.4L136.9,531.5L141.5,531.1L140.5,530.9L136.8,531.4L134.9,530.3L137.2,529.8L132.4,530.2L131.4,529.9L126.1,530.7L125.4,530.6L125.7,530.3L122.2,531L121.8,530.8L122.2,529.9L127.2,528.4L126.1,528.5L126.5,528.3L129,528.2L129.3,528.1L127.7,528.1L129.2,527.9L131.9,528.2L133,528.7L136.1,528.4L139.5,529.5L142.3,529.6L144.9,529.2L176.8,529.1L176.8,541.3L143.1,541.3L138.5,542.5L138,542.1L138.7,543.5L135.3,544L133.8,545.4L132.2,545.6L132.1,545.6Z","type":"port","terrain":"ice","owner":"amber","core":false},{"id":45,"name":"北氷原","kana":"ほくひょうげん","capital":"氷丘","capital_kana":"ひょうきゅう","capX":139.1,"capY":521.7,"cx":104.1,"cy":492.5,"path":"M43.4,478.8L31.6,477.7L34.7,476.5L29.3,477.8L24.5,476.4L52.4,475.9L37.2,475L53.2,475.2L50.7,474.2L54.1,473.8L50.7,472.6L36.5,474L30.6,473.4L34.9,472.3L28.4,472.8L32.3,471.9L15.2,470.1L18.5,469.4L16.3,469.3L17.8,468.1L55.4,464.7L60.9,462.5L59.7,459.7L66.8,459L48.6,459.5L46.2,458.1L67.5,453.5L72.3,455.7L69,453.4L71.2,453L176.8,471L176.8,529.1L140.3,529.4L138.5,528.8L143.8,528.3L136.1,528.2L141.9,527.5L135.8,527.3L137.6,526.7L122.9,529.4L122.9,527.7L127.3,526.7L125.7,526.4L131.9,526.8L125,525.6L142.6,526.9L135.4,525.5L138.1,525.6L135.7,525.2L138.7,523.8L129.8,525.6L124.6,524.8L138.6,523.2L139.8,522L136.2,522.5L137.4,520.3L142.2,521.3L139.6,520.4L142.6,520.1L141.4,519.2L137.2,519.9L142.3,518.2L138.5,518.3L142.3,516.8L140.1,515.9L142.1,515.3L130.5,515.2L117.7,511.9L127.9,511.3L140.2,513.7L135.9,512.3L139.8,511.9L135.4,511.4L139.8,511.5L138.7,510.6L132.5,509.8L138.3,509.8L130.9,509.3L134.3,507.9L129.2,509L135.8,507.2L126.8,507.6L134.2,506L125.2,506L128.5,504.3L124.7,505.6L122,502.6L123.6,502.4L121.9,502.4L124.5,505.2L120.6,506L121.6,507.4L112.7,507.4L110.6,506.2L119,503.2L112.2,504.4L117.3,502.3L112,501.9L119.5,501.7L115.5,501.5L118.2,500.1L116,500L117.8,499.7L116.8,498.8L111.7,498.4L115.1,496.8L109.7,495.2L112.2,494.8L107.7,492.9L109.3,491.7L102.7,492.7L109.2,490.5L95,485.7L98,484.9L96.4,483.6L69.1,480L58,482L55,481.6L55.9,480.6L47.2,481.2L51.7,482.6L34.2,480L42.3,480.5L44.3,478.8L43.4,478.8ZM132.5,523.1L133.3,523.2L131.7,523.5L129.9,523.4L132.5,523.2L132.5,523.1ZM130.3,523.1L126,523.5L128.7,522.7L131.6,522.7L130.5,523.1L130.3,523.1ZM136.6,516L138.9,516.1L139.7,516.4L138.1,517L138.1,518L136.9,518.2L135.7,517.1L137.8,516.1L135.8,516.3L136.6,516L136.6,516ZM127.3,519.1L123.6,519.8L122,519.6L119.6,518.8L119.9,518.6L124.5,518.6L123.5,518.4L124.8,517.8L122.2,518.5L121.9,518.5L122.6,518.2L121.3,518.4L121.8,518L121.4,517.7L120.4,518L117.1,517.8L115.6,517.2L117.3,516.9L119,517.3L116,516.3L116.7,516.2L116.3,515.9L116.9,515.7L119.9,515.9L116.5,515L116.5,514.5L116.9,514.1L119.3,513.7L125.2,514.4L128.2,515.9L132.3,516.6L132.8,516.9L132.1,517.3L133.2,517.5L131.5,518.4L127.3,519.1L127.3,519.1ZM133.3,510.3L134.7,510.6L131.4,510.5L131.9,510.1L133.1,510.2L133.3,510.3ZM121.7,509.5L121.2,509.3L121.4,509L123.3,508.2L124.6,509.2L124.1,509.7L121.8,509.5L121.7,509.5ZM129.6,508.5L128.6,509L127,509.1L126,508.8L125.7,508.1L126.9,507.8L130,508L130.4,508.3L130.1,508.5L129.6,508.5ZM125.1,506.9L124.3,506.8L124.1,506.3L128,506.3L125.4,507L125.1,506.9ZM115.3,502.6L113.7,503.4L111.8,503.3L113.2,502.9L112.1,502.7L115.5,502.3L115.4,502.6L115.3,502.6ZM111.1,500.5L110.6,500.3L110.6,500.7L109.7,500.7L108.8,500.4L112,500.1L111.2,500.5L111.1,500.5ZM111.5,501L110.9,501L112.1,500.5L112.2,500.2L115,499.9L114.4,499.7L115.8,499.9L114,500.6L113.5,501.1L112.7,501.3L112.3,501.1L112.9,501L111.6,501L111.5,501ZM112.2,498.6L115.2,499.1L113.9,499.3L113.6,498.8L112.8,499.1L111.7,498.8L112.2,498.6ZM109.9,495.6L113,496.4L111.4,496.6L112,496.5L111.7,496.3L111.9,496.1L109.4,495.7L109.8,495.6L109.9,495.6ZM109.3,494.2L108.3,494.4L108.3,494.2L106.4,494.3L106.4,493.9L105.7,493.9L106.6,493.7L110.2,494.1L110,494.3L109.3,494.2ZM107.2,490.5L101.4,490.5L106.1,490.1L107.3,490.5L107.2,490.5ZM35,478.8L34,479.2L32,479L34.8,478.8L35,478.8ZM23.4,474.4L24.7,474.5L20.3,474.8L17.8,474.3L19.2,474L23,474.2L23.4,474.4ZM30.2,474.2L31.9,474.3L26.2,474.5L24.9,474L28.7,474.1L30.2,474.2Z","type":"fortress","terrain":"ice","owner":"amber","core":false},{"id":46,"name":"東氷","kana":"とうひょう","capital":"氷浦","capital_kana":"ひょううら","capX":282.4,"capY":465.4,"cx":253.9,"cy":470.4,"path":"M267.1,509.2L176.8,509.9L176.8,471L103.6,459.7L77.5,453.6L82.8,453.4L80.5,452.3L83.5,451.6L79.8,450.1L87.4,449L107.5,452.4L90.7,448.7L98.8,447.9L118.7,446.7L123.6,448.1L122.2,451L124.1,451.5L126.9,448.5L143.8,450.9L145.5,450.7L137.5,449.1L146.5,449.1L137.2,445.9L173.1,450.1L175.8,449.6L171.6,448.8L174.5,448.2L172.4,447.7L173.6,447.1L186.2,447.6L166.9,444.5L200.3,445.9L160.7,443.4L180.3,443.6L168.3,442.5L184.2,441.6L206.9,444.6L203.7,443.3L216.4,442.3L205.3,440.8L240.8,439.6L278.8,441.5L223.4,443.7L281.2,442.2L283.8,443.2L277.4,444.4L302.9,445.3L288.6,447.2L245.8,447.5L255.2,448.2L239,449.9L284.5,448.8L272.9,451.3L274.7,451.9L291.3,450.3L292.5,448.6L304.4,449.2L303.2,451.4L288.7,456.6L311.9,450.4L315.9,450.9L313.2,452.2L326.1,452L336.4,449.6L358.2,451.7L335.7,456.3L305.5,456.8L333.9,457.5L309.3,459.3L307.9,460.8L314.6,461.5L312.4,464.4L316.5,464.2L304.8,466.7L303.5,467.5L305.5,467.7L299.3,472.8L301.6,473.5L305,471.1L315.2,472.8L305.1,473.7L318.4,475L319.9,476L318.5,478L307.4,476.9L295,478.2L300.2,478.9L296.3,479.6L301.4,479.7L301,480.8L312.1,481.4L299.8,482.3L313.9,483.6L312.4,483.9L313.9,485.4L312.5,486.9L297.6,484L302.4,485.1L296.3,484.7L307.4,486.9L296.8,486.8L306.5,487.3L306.8,489.2L304,489.5L315.9,490.6L312.3,491.9L298.7,489.9L300.4,491L296.5,491.5L298.7,491.6L296.4,492.8L300.1,495.2L300.3,493L308.6,493.9L307.2,496.3L297.4,497.4L287.8,494.9L298.1,495.3L287.7,494.2L285.6,495.8L278.7,493.5L284.2,496L276,497.5L268.9,496.2L274.7,497.5L267.3,498.1L268.6,499.2L282.1,498.3L269.1,499.7L284.7,501.3L277.4,502L280.8,502.2L279.5,503.7L285,502L296.2,504.9L286.1,505.2L283.2,507.8L261.8,503.9L269.5,506L263,506.8L275.9,507.2L267.2,509.2L267.1,509.2ZM125.2,447.8L124.8,447.3L125.3,447.1L127.9,447L129.7,447.6L136.8,448.8L131.7,448.8L125.7,448.1L125.3,447.8L125.2,447.8ZM173.8,446.4L174.4,446.8L170.8,447.5L172.7,448.2L171,448.4L168.8,447.7L160.8,446.7L159.1,445.9L155.9,445.3L163.8,445L172.2,446.1L173.8,446.4ZM155.3,444.4L152.5,444.3L152.2,444L152.9,443.8L157.6,444.2L157.1,444.4L155.3,444.4ZM202.1,442.6L203,442.7L200.5,443.2L196,442.3L200,442.5L202.1,442.6ZM198.4,442.9L199.8,443.3L195.1,443L190.7,442.2L194.2,442.2L198.3,442.8L198.4,442.9ZM205.5,442.2L206.6,442.5L195.3,441.5L196.8,441.3L196,441.2L196.3,441.2L203.7,442.1L205.5,442.2ZM299.4,502L299.1,502.2L297.7,501.9L294.9,501.9L297.4,503L298.9,502.9L298,503.2L298.4,503.5L298,503.7L296.2,503.6L295.8,503.5L296.4,503.2L295.3,503.4L293.2,502.7L287.6,501.9L288,501.6L285.9,501L285.3,499.8L288.4,499.5L292.8,499.7L295.1,500.8L298.2,501.4L298,501.7L299.2,501.6L299.4,502L299.4,502ZM283.5,499.3L283,500L280.6,499.7L282.6,499.3L283.5,499.3ZM299.5,500.3L299.7,500.5L295.5,500.5L295.1,500.4L295.7,500.3L294.7,499.9L292.6,499.5L285.1,499.4L284.7,499.1L292.2,498.4L299.3,499.1L299.7,499.4L298.1,499.9L299.5,500.3L299.5,500.3ZM285.1,498.6L278.5,497.7L280.8,497L281.1,496.5L285.4,496.5L292.4,497.5L282.4,497.1L294.1,497.9L293.7,498.2L285.4,498.6L285.1,498.6ZM308.3,491.9L309.5,492.2L303.1,492.8L299.2,491.9L300,491.3L303.3,490.7L307.2,491L308,491.7L308.3,491.9ZM317.3,489.7L317.3,490.1L316.8,490.2L314.6,490L316.3,489.5L317.2,489.8L317.3,489.7ZM311.3,488.3L311.7,488.4L309.8,489.3L306.4,488.7L307.2,488.2L306.8,487.8L307.6,487.5L310.2,487.6L310.4,487.8L309.1,488.1L310.3,488.1L311.3,488.3ZM325.2,486.9L324.7,487.3L325,487.6L323.5,488.1L323.5,487.7L322,487.5L316.4,487.7L316.2,487.2L316.7,486.8L316.4,486.6L316.7,486.2L316.1,485.8L318.4,485.6L319.6,486L320.5,485.9L321.1,485.3L322.5,485.9L320.2,486.5L321.3,486.4L321.2,486.8L322.4,487.2L324.9,486.8L325.2,486.9ZM318.3,481.8L318.3,482.4L317.7,482.7L317.8,482.2L315.2,479.5L315.3,478.9L317.1,478.9L315.9,478.7L315.4,478L315.9,477.9L317.6,478.5L317.5,480.2L318.2,481.8L318.3,481.8ZM321.3,473L319.9,472.9L322,471.7L323.4,472L322.1,473L321.3,473ZM314,471.7L314.5,472L307.5,471.2L310.3,471L311.6,471.6L313.8,471.6L314,471.7ZM314.8,471L315.2,470.7L314,470.2L316.6,470.2L316.2,470.5L316.4,470.8L315.2,471.4L314.7,471.4L314.8,471.1L314.8,471ZM308.1,470.2L305.7,470L307.6,469.6L308.3,470.2L308.1,470.2ZM316.3,468.5L316.3,469.1L315.4,469.3L316.4,469.8L314.3,469.7L314.2,469L316.2,468.4L316.3,468.5ZM320,467.6L318.5,468.1L317.7,467.9L320.1,467.5L320,467.6ZM315.1,467L312.4,466.7L315.5,465.9L314.9,466L315.7,466.2L314.6,466.6L315.6,466.7L314.2,466.7L315.7,466.8L315,467L315.1,467ZM324,465.3L321.6,465.7L321.9,465.6L321.6,465.4L321.8,465.1L323.5,464.4L324.7,464.7L324,465.2L324,465.3ZM317.1,460L322.8,459.4L325.5,459.9L322.3,461.3L320.4,461.6L318.7,461.6L313.5,460.7L316.3,460.3L315.8,459.8L317.1,459.9L317.1,460ZM312.9,459.7L311.9,459.6L312.5,459L313.9,458.7L317.4,459.2L315,459.5L312.9,459.7ZM322.8,451L319.8,450.3L322.5,450.2L325.1,450.9L324.8,451L322.8,451ZM313.2,449L312.3,448.7L312.1,448.2L314.3,448.3L317.8,449.7L315.5,449.7L313.2,449Z","type":"fortress","terrain":"ice","owner":"amber","core":false}];
+const GEO_ADJ = [[1],[0,2,3],[1,3,4],[1,2,4,5],[2,3,5,6],[3,4,6,7],[4,5,7,8],[5,6],[6,9],[8,10],[9,11],[10,12],[11,13],[12,15,35],[15,16,23],[13,14,24],[14,24],[18,21,24],[17,19,20,21,22,25],[18],[18,28],[17,18,22,23,24],[18,21,23],[14,21,22,24],[15,16,17,21,23],[18,26],[25,27,28],[26],[20,26,29],[28,30,31],[29,31],[29,30,32],[31,33],[32,34],[33,44],[13,36,39],[35,37,38,39],[36,38,43],[36,37,39],[35,36,38,40,41],[39,41],[39,40],[43],[37,42,44,45,46],[34,43,45],[43,44,46],[43,45]];
+const GEO_RIVERS = [{"name":"揚子江","pts":"215.8,254 214.6,253.5 205.9,254 201.7,259.6 200.2,263 200.3,264.7 196.8,265.4 196.1,267.1 194.2,266.8 193,270.6 187.4,272.1 187.2,274 183.4,275.1 183.6,276.9 182.4,279 180.4,279.7 178.9,281.4 176,282.7 171.5,283.4 169.3,281.8 166.4,281.7 163.1,277.7 161.7,277.3 161.5,275.8 158.9,274.9 159,273 156.1,273.3 154.1,271.9 152.5,273.2"},{"name":"","pts":"138.6,286.6 145,280.7 146.5,281 149.7,279.1 148.5,277.8 147.5,278 147.3,277.4 148.6,276.7 149.6,277.3 152.6,273.1"},{"name":"黄河","pts":"65.6,157.9 67.4,156.5 67.2,155.5 68.1,155 68,154.2 68.8,153.3 74,151.7 73.9,151.1 74.6,150.7 79.5,150.5 80.3,151.3 82.7,151.2 84.5,153.1 88.2,154.6 89.9,154.3 94.1,155.4 96.6,154.4 97.9,155.3 103.7,154.5 104.2,155.3 108.5,157.2 111.8,157.9 113.6,157.4 116.8,159.1 117.9,160.4 118.4,161.9 117.5,163.9 118.7,165.5 118.3,165.4 118.2,166.7 117,167.7 114.5,168.3 115.9,169.3 114.6,172.1 112.9,173.2 113.2,174 111.7,177.4 112,178.4 111.5,179.3 108.3,181.3 107.3,182.8 107.4,185.3 110.2,187.6 109.7,188.2 110.8,188.9 110.2,191 108.9,191.7 109.5,192.5 109.2,193.4 106.6,196.5 105.7,196.5 106.3,197.1 105.8,199.4 106.6,200 105.9,200.4 107.3,202.6 106.6,206.9 108.7,213.4 105.3,218.2 104.1,222.9 104.5,224.9"},{"name":"","pts":"159,220.3 159.1,218.4 161.7,216 164.9,214.8 164.9,213.9 166.9,211.9 168.2,211.8 170,210.4 171.3,210.2 171.2,209.5 172.1,208.9 173.2,209.1 173.7,207.3 176.5,205.1 179.6,203.7 179.9,202.5 182.1,200.3 184.6,200 186,199.1 187.6,196.3 191.3,194.9 192.2,193.7 195.3,193.6 199.1,192.2 200.5,189.6 203.2,189.2 207.3,186.9 208.9,187.1"},{"name":"","pts":"104.5,224.9 107.6,225.5 111.8,224.5 112.1,223.8 113.1,223.9 114.9,222.7 119.8,222.2 121.4,220.5 123.9,219.4 128,221.2 134.4,223 138.1,222.4 141.3,220.9 143.4,220.8 147.4,222 148.9,221.2 156.5,221.8 158.9,220.3"},{"name":"利根川","pts":"541.6,186.6 541.5,187.7 539.6,189.2 539.6,190 541,192.5 540.6,195.1 541.7,197.5 543.8,199.4 549.6,201.1 552.3,201.1 555.5,202.5 559.5,206.4 562.6,207.6 571,206.9 577.1,210"},{"name":"信濃川","pts":"525.3,187.8 533.3,183.8 539.2,177.8 541.4,166.5"},{"name":"漢江","pts":"313.7,164.5 312.3,165.1 311.5,166.4 309.4,165.5 308,166.4 302.2,162.9"},{"name":"洛東江","pts":"363.9,178.9 364.8,181 363,181.8 362.7,183.1 359.9,184.3 359.7,187.2 358.3,187.5 358.6,188.3 357.9,188.3 358.9,191.4 351.1,190.9 350,191.8 348,191.9 346.4,193.3 343.3,191.9 342,195.2 344,196.3 343.5,198.4 344.4,198.8 345.8,202.1 346.5,205.6 346.4,210.8 348.6,211.8 346.6,212.7 346.4,213.3 347.7,214.9 345.4,215 346.4,216.4 345.4,217.7 345.4,219.4 347.1,220.8 346,222.1 348.1,223.5 354.3,223.3 356.5,224.1 358.7,222.9 360.4,223.6 363.1,226.6 361.9,230"},{"name":"大渓川","pts":"728.1,471.9 725.9,473.4 723.2,473.2 720.2,473.9 712.1,471.9 710.4,470.3 710.4,469.1 707.8,468.9 707,467.8 703.9,468.7 700.3,468.5 698,467.6 697.1,468.3 692.8,465.6 692.1,464.2 690.2,463.9 687.7,461.8 687.2,460.6 683.7,459.1 685.5,455.3 685.1,454.3 686,453.4 684.9,452.2 682.3,451.9 682.2,449.6 684.3,446.5 686.7,444.4 686.8,442.9 691.4,435.8 690.3,433.8 686.7,432 685.2,429.6 685.8,428.6 684.2,426.4 684.4,425.3 682.3,425.5 681.9,424.2 679.2,422.2 676.4,422 674.9,423.1 671,423.9 669.6,423.3 666.7,423.5 665.1,424.4 664.7,425.6 663,427 659.7,428.3"},{"name":"","pts":"670.3,403.4 669.3,405.8 667.7,405.9 667.9,408.3 665.4,407.2 660.7,407.1 659.3,404.8 658.3,404.6 656.2,404.9 655.6,405.8 653.9,405.4 652.1,406.1 651.4,406.1 651.4,405.3 649.6,405.4 649,405.7 649.5,407 648.2,408.6 645.4,409.3 644.3,413 646.7,414.2 646.9,415.4 647.8,415.8 647.5,417.5 648.5,419.3 648.8,422.6 649.7,423 652.5,422.7 654.3,421.9 656.9,424.6 656.9,427.3 659.4,428.1"},{"name":"","pts":"756.3,463.7 753.6,461.9 753.3,460.6 750.7,460.2 747.7,458.4 745.7,458.3 745.3,459.2 745.9,461.7 743.8,464.3 738.4,467.6"},{"name":"紅崖川","pts":"821.9,502.8 818.7,503.8 814.9,504 812.1,506.4 810.9,505.6 808.9,506.2 806.7,509 804.3,510 797.8,510.1 793.1,512.8 791.5,515.5 790,516.1 788.3,516.1 784.1,514.5 780.3,517 779.2,520.2 777.4,521 776,522.7 775.5,522.4 775.3,523.6 774.4,524 773.2,526.7 770.1,529.4 769.3,529.5 768.3,530.8 766.4,530.7"},{"name":"","pts":"752.7,542.6 750.8,544 748.2,547.6 747.7,549.4 748.6,550.8 748.7,552.3 747.3,553.4 743.5,552.7 741.9,550.9 740.8,551.4 740,550.8 740.7,549.7 740.1,549.2 738.5,549.2 735.5,550.6"},{"name":"","pts":"766.4,530.7 765.3,531.7 765.6,532.4 765,533.5 762.9,535.6 761.9,535.7 762.4,536.4 761.9,537.5 760.9,537.9 759.2,540.1 753.5,541.4 752.7,542.6"}];
+const GEO_MOUNTAINS = [{"name":"奥羽山脈","pts":"566.1,121.2 571,137.1 577,153 580,166.9 579,178.8"},{"name":"飛騨山脈","pts":"515.4,187.8 522.4,197.7 529.3,207.6 535.3,215.6"},{"name":"太白山脈","pts":"334.2,117 347.6,133.1 350.3,147.8 359.7,161.2 362.4,178.7 366.4,194.8 365.1,210.9"},{"name":"太行山脈","pts":"132.3,209.8 138.2,194.3 146.6,177.6 153.7,162.1 159.7,150.2"},{"name":"秦嶺山脈","pts":"75.1,233.1 93,231.9 110.8,232.5 127.5,234.3"},{"name":"喀斯喀特山脈","pts":"625.6,398.9 625,420.4 621.9,438.3 628.1,460.5 631.8,480.2"},{"name":"落磯山脈","pts":"738.9,398.9 756.1,435.8 773.4,465.4 800.5,490"},{"name":"東氷嶺","pts":"249.1,535 260.2,525 276.9,514.4 293.6,504.4"}];
+const GEO_SEA_PAIRS = [[0,1],[13,15],[13,35],[14,16],[14,23],[15,24],[16,24],[20,28],[33,34],[34,44],[37,43]];
+const GEO_RIVER_PAIRS = [[6,7],[8,9],[17,24],[18,19],[21,24],[23,24],[26,28],[28,29],[35,39],[36,39],[38,39]];
+const SEA_LABELS = [{"name":"北溟海","x":421.1,"y":39.7,"size":17},{"name":"燕海","x":192.7,"y":59.6,"size":15},{"name":"玄界海","x":446.9,"y":282.2,"size":15},{"name":"南洋","x":500.5,"y":337.8,"size":16},{"name":"氷海","x":440.9,"y":532.5,"size":15},{"name":"東大洋","x":820.3,"y":304.0,"size":17},{"name":"瓊海","x":41.7,"y":313.9,"size":14}];
 /* =====================================================================
    ENGINE — ported 1:1 from space-4/space-5 server/src/engine.ts.
    Same constants, same formulas, same balance rules. State lives in a
@@ -608,47 +655,66 @@ const PERSONALITIES = {
 };
 const NATION_DEFS = [
   { key: "azure", name: "苍蓝共和国", color: "#4f83cc", personality: "balanced",
-    perk: "开局均衡 · 首都在庆尚北道",
+    perk: "开局均衡 · 首都在宮浜",
     advisors: [ { role: "defense", name: "沈铎" }, { role: "economy", name: "林若澜" }, { role: "science", name: "高澈" } ] },
   { key: "crimson", name: "赤岩联邦", color: "#c0453a", personality: "expansion",
-    perk: "开局均衡 · 首都在平安北道",
+    perk: "开局均衡 · 首都在燕北",
     advisors: [ { role: "defense", name: "霍骁" }, { role: "economy", name: "钱穆青" }, { role: "science", name: "萧然" } ] },
   { key: "emerald", name: "翡翠联盟", color: "#3f9e6e", personality: "economy",
-    perk: "开局均衡 · 首都在全罗北道",
+    perk: "开局均衡 · 首都在東雲",
     advisors: [ { role: "defense", name: "顾长风" }, { role: "economy", name: "苏曼" }, { role: "science", name: "叶临川" } ] },
   { key: "amber", name: "琥珀同盟", color: "#cf9432", personality: "tech",
-    perk: "开局均衡 · 首都在咸镜北道",
+    perk: "开局均衡 · 首都在金浜",
     advisors: [ { role: "defense", name: "陆则明" }, { role: "economy", name: "唐一诺" }, { role: "science", name: "闻天工" } ] },
 ];
 const REGION_DEFS = [
-  { name: "咸镜北道", type: "industry", owner: "amber", core: true, terrain: "mountains", climate: "arctic" },
-  { name: "罗先市", type: "port", owner: "amber", terrain: "coast", climate: "arctic" },
-  { name: "两江道", type: "fortress", owner: "amber", terrain: "mountains", climate: "arctic" },
-  { name: "慈江道", type: "fortress", owner: "neutral", terrain: "mountains", climate: "arctic" },
-  { name: "平安北道", type: "industry", owner: "crimson", core: true, terrain: "hills", climate: "arctic" },
-  { name: "咸镜南道", type: "industry", owner: "amber", terrain: "coast", climate: "temperate" },
-  { name: "江原北道", type: "port", owner: "neutral", terrain: "mountains", climate: "temperate" },
-  { name: "平安南道", type: "farm", owner: "crimson", terrain: "plains", climate: "temperate" },
-  { name: "平壤市", type: "tech", owner: "crimson", terrain: "plains", climate: "temperate" },
-  { name: "黄海北道", type: "farm", owner: "crimson", terrain: "plains", climate: "temperate" },
-  { name: "黄海南道", type: "farm", owner: "neutral", terrain: "coast", climate: "temperate" },
-  { name: "江原道", type: "fortress", owner: "neutral", terrain: "mountains", climate: "temperate" },
-  { name: "仁川广域市", type: "port", owner: "neutral", terrain: "coast", climate: "temperate" },
-  { name: "首尔市", type: "tech", owner: "neutral", terrain: "plains", climate: "temperate" },
-  { name: "京畿道", type: "industry", owner: "neutral", terrain: "plains", climate: "temperate" },
-  { name: "忠清北道", type: "industry", owner: "neutral", terrain: "hills", climate: "temperate" },
-  { name: "忠清南道", type: "farm", owner: "neutral", terrain: "coast", climate: "temperate" },
-  { name: "大田广域市", type: "tech", owner: "neutral", terrain: "plains", climate: "temperate" },
-  { name: "世宗市", type: "farm", owner: "neutral", terrain: "plains", climate: "temperate" },
-  { name: "庆尚北道", type: "industry", owner: "azure", core: true, terrain: "mountains", climate: "subtropical" },
-  { name: "大邱广域市", type: "industry", owner: "azure", terrain: "hills", climate: "subtropical" },
-  { name: "蔚山广域市", type: "industry", owner: "azure", terrain: "coast", climate: "subtropical" },
-  { name: "庆尚南道", type: "industry", owner: "azure", terrain: "coast", climate: "subtropical" },
-  { name: "釜山广域市", type: "port", owner: "azure", terrain: "coast", climate: "subtropical" },
-  { name: "全罗北道", type: "farm", owner: "emerald", core: true, terrain: "plains", climate: "subtropical" },
-  { name: "光州广域市", type: "industry", owner: "emerald", terrain: "plains", climate: "subtropical" },
-  { name: "全罗南道", type: "port", owner: "emerald", terrain: "coast", climate: "subtropical" },
-  { name: "济州道", type: "farm", owner: "emerald", terrain: "island", climate: "tropical" },
+  {"name": "北嶺", "type": "farm", "owner": "azure", "terrain": "plains", "climate": "arctic"},
+  {"name": "青岬", "type": "farm", "owner": "azure", "terrain": "mountains", "climate": "arctic"},
+  {"name": "岩峰", "type": "fortress", "owner": "azure", "terrain": "mountains", "climate": "temperate"},
+  {"name": "秋浦", "type": "oil", "owner": "azure", "terrain": "hills", "climate": "temperate"},
+  {"name": "宮浜", "type": "port", "owner": "azure", "core": true, "terrain": "plains", "climate": "temperate"},
+  {"name": "羽月", "type": "farm", "owner": "azure", "terrain": "mountains", "climate": "temperate"},
+  {"name": "磐梯", "type": "farm", "owner": "azure", "terrain": "mountains", "climate": "temperate"},
+  {"name": "越沢", "type": "port", "owner": "azure", "terrain": "plains", "climate": "temperate"},
+  {"name": "霞浦", "type": "industry", "owner": "azure", "terrain": "plains", "climate": "temperate"},
+  {"name": "千岬", "type": "industry", "owner": "emerald", "terrain": "coast", "climate": "temperate"},
+  {"name": "東雲", "type": "tech", "owner": "emerald", "core": true, "terrain": "coast", "climate": "temperate"},
+  {"name": "湘浦", "type": "industry", "owner": "emerald", "terrain": "coast", "climate": "temperate"},
+  {"name": "駿嶺", "type": "industry", "owner": "emerald", "terrain": "mountains", "climate": "temperate"},
+  {"name": "濃浜", "type": "industry", "owner": "emerald", "terrain": "plains", "climate": "temperate"},
+  {"name": "筑紫", "type": "port", "owner": "emerald", "terrain": "plains", "climate": "subtropical"},
+  {"name": "関門", "type": "fortress", "owner": "emerald", "terrain": "hills", "climate": "subtropical"},
+  {"name": "薩摩", "type": "port", "owner": "emerald", "terrain": "coast", "climate": "subtropical"},
+  {"name": "江嶺", "type": "fortress", "owner": "emerald", "terrain": "mountains", "climate": "temperate"},
+  {"name": "畿央", "type": "tech", "owner": "emerald", "terrain": "plains", "climate": "temperate"},
+  {"name": "首丘", "type": "tech", "owner": "emerald", "terrain": "plains", "climate": "temperate"},
+  {"name": "仁港", "type": "industry", "owner": "emerald", "terrain": "coast", "climate": "temperate"},
+  {"name": "清嶺", "type": "farm", "owner": "emerald", "terrain": "mountains", "climate": "temperate"},
+  {"name": "洪原", "type": "farm", "owner": "emerald", "terrain": "plains", "climate": "temperate"},
+  {"name": "全原", "type": "farm", "owner": "emerald", "terrain": "plains", "climate": "subtropical"},
+  {"name": "慶嶺", "type": "industry", "owner": "emerald", "terrain": "mountains", "climate": "temperate"},
+  {"name": "遼原", "type": "oil", "owner": "crimson", "terrain": "hills", "climate": "temperate"},
+  {"name": "燕北", "type": "farm", "owner": "crimson", "core": true, "terrain": "plains", "climate": "temperate"},
+  {"name": "津門", "type": "port", "owner": "crimson", "terrain": "coast", "climate": "temperate"},
+  {"name": "斉魯", "type": "farm", "owner": "crimson", "terrain": "hills", "climate": "temperate"},
+  {"name": "江淮", "type": "industry", "owner": "crimson", "terrain": "plains", "climate": "temperate"},
+  {"name": "滬浜", "type": "tech", "owner": "crimson", "terrain": "coast", "climate": "subtropical"},
+  {"name": "銭塘", "type": "industry", "owner": "crimson", "terrain": "hills", "climate": "subtropical"},
+  {"name": "閩南", "type": "port", "owner": "crimson", "terrain": "mountains", "climate": "subtropical"},
+  {"name": "粤江", "type": "tech", "owner": "crimson", "terrain": "hills", "climate": "subtropical"},
+  {"name": "琼崖", "type": "port", "owner": "crimson", "terrain": "island", "climate": "subtropical"},
+  {"name": "華嶺", "type": "tech", "owner": "amber", "terrain": "mountains", "climate": "temperate"},
+  {"name": "杉原", "type": "farm", "owner": "amber", "terrain": "hills", "climate": "temperate"},
+  {"name": "金浜", "type": "tech", "owner": "amber", "core": true, "terrain": "coast", "climate": "subtropical"},
+  {"name": "銀砂", "type": "fortress", "owner": "amber", "terrain": "desert", "climate": "subtropical"},
+  {"name": "薯原", "type": "farm", "owner": "amber", "terrain": "mountains", "climate": "temperate"},
+  {"name": "蒼穹", "type": "farm", "owner": "amber", "terrain": "plains", "climate": "temperate"},
+  {"name": "泉原", "type": "oil", "owner": "amber", "terrain": "mountains", "climate": "temperate"},
+  {"name": "南氷", "type": "port", "owner": "amber", "terrain": "ice", "climate": "polar"},
+  {"name": "氷都", "type": "tech", "owner": "amber", "terrain": "ice", "climate": "polar"},
+  {"name": "中氷", "type": "port", "owner": "amber", "terrain": "ice", "climate": "polar"},
+  {"name": "北氷原", "type": "fortress", "owner": "amber", "terrain": "ice", "climate": "polar"},
+  {"name": "東氷", "type": "fortress", "owner": "amber", "terrain": "ice", "climate": "polar"},
 ];
 const TIERS = [
   { name: "小国", min: 0 },
@@ -688,9 +754,9 @@ const WEATHERS = {
   fog:     { name: "浓雾", effect: "无特殊影响" },
   drought: { name: "干旱", effect: "农业省钱与补给 −40%" },
 };
-const ADJACENCY = [[1,2,5],[0],[0,3,5],[2,4,5,7],[3,7],[0,2,3,6,7],[5,7,9,11],[3,4,5,6,8,9,10],[7,9],[6,7,8,10,14],[7,9,14],[6,14,15,19],[13,14],[12,14],[9,10,11,12,13,15,16],[11,14,16,17,18,19,24],[14,15,17,18,24],[15,16,18],[15,16,17],[11,15,20,21,22,24],[19,22],[19,22],[19,20,21,23,24,26],[22],[15,16,19,22,26],[26],[22,24,25,27],[26]];
-const SEA_SET = new Set(["26:27", "27:26"]);
-const RIVER_SET = new Set(["10:14", "14:10", "11:14", "14:11"]);
+const ADJACENCY = GEO_ADJ;
+const SEA_SET = new Set(GEO_SEA_PAIRS.flatMap(([a, b]) => [a + ":" + b, b + ":" + a]));
+const RIVER_SET = new Set(GEO_RIVER_PAIRS.flatMap(([a, b]) => [a + ":" + b, b + ":" + a]));
 function neighbors(idx) { return ADJACENCY[idx] || []; }
 function crossingKind(a, b) {
   if (SEA_SET.has(a + ":" + b)) return "sea";
@@ -723,15 +789,19 @@ function persist(touchSeen) {
     localStorage.setItem(SAVE_KEY, JSON.stringify({ world: world, logs: storedLogs, logSeq: logSeq }));
   } catch (e) { /* storage full/blocked: game continues in memory */ }
 }
+let saveIncompatible = false; // an old-map save exists but cannot run on this world
 function loadSave() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (!data || !data.world || !Array.isArray(data.world.regions)) return null;
-    // Rebuild guard (same as server): old-map saves are incompatible.
-    if (data.world.regions.length !== REGION_DEFS.length) return null;
     if (!data.world.playerKey || data.world.status === "setup") return null;
+    // Map guard: a save from another world (e.g. the old 28-province
+    // peninsula map, or any save without the remix47 stamp) must NOT
+    // load, must NOT crash — it is left untouched on disk and the
+    // setup screen says plainly that a new game is needed.
+    if (data.world.regions.length !== REGION_DEFS.length || data.world.mapId !== "remix47") { saveIncompatible = true; return null; }
     return data;
   } catch (e) { return null; }
 }
@@ -800,15 +870,21 @@ function createWorld(playerKey) {
     }
     if (def.key !== playerKey) truces[def.key] = false;
   }
-  /* Master table A6/A7: 17 provinces dealt out (azure 19-23, crimson
-     4/7/8/9, emerald 24-27, amber 0/1/2/5), 11 neutral. Every dealt
-     province: inf 8 / tank 2; each nation's first-listed province:
-     inf 8 / tank 4 / missile 1. Neutral provinces: inf 5 / tank 1.
+  /* Opening deal (remix-world README): all 47 provinces are dealt to
+     the four nations (azure 9, crimson 10, emerald 16, amber 12), no
+     neutrals at start. Every dealt province: inf 8 / tank 2; each
+     nation's CAPITAL (core) province: inf 8 / tank 4 / missile 1.
      No opening buildings anywhere. */
   const firstIdx = {};
   for (let i = 0; i < REGION_DEFS.length; i++) {
     const o = REGION_DEFS[i].owner;
     if (o !== "neutral" && firstIdx[o] == null) firstIdx[o] = i;
+  }
+  /* The reinforced garrison belongs to the CAPITAL (core) province,
+     wherever the map order puts it — on the remix world the first
+     listed province of a nation is not its capital. */
+  for (let i = 0; i < REGION_DEFS.length; i++) {
+    if (REGION_DEFS[i].core) firstIdx[REGION_DEFS[i].owner] = i;
   }
   const regions = [];
   for (let i = 0; i < REGION_DEFS.length; i++) {
@@ -821,7 +897,7 @@ function createWorld(playerKey) {
       coreOf: def.core ? def.owner : null, buildings: buildings, units: units, weather: "clear", temp: 16 });
   }
   world = {
-    playerKey: playerKey, quarter: 0, strategy: "balanced", autopilot: true,
+    mapId: "remix47", playerKey: playerKey, quarter: 0, strategy: "balanced", autopilot: true,
     combatStyle: "even", hostFlags: { produce: true, research: true, attack: true },
     targetPref: "weak", defenseTier: "standard", priorityTarget: null, autoAtk: {},
     charge: 2, truceUntil: {},
@@ -838,10 +914,11 @@ function createWorld(playerKey) {
       tropical: ["rain", "clear", "storm", "cloudy", "rain", "clear"],
       subtropical: ["clear", "cloudy", "rain", "clear", "cloudy"],
       temperate: ["clear", "cloudy", "cloudy", "rain", "clear", "fog"],
+      polar: ["snow", "snow", "cloudy", "fog", "clear", "snow"],
     };
     const options = table[climate] || table.temperate;
     r.weather = options[Math.floor(Math.random() * options.length)] || "clear";
-    const bandOffset = climate === "arctic" ? -9 : climate === "tropical" ? 7 : climate === "desert" ? 5 : 0;
+    const bandOffset = climate === "polar" ? -14 : climate === "arctic" ? -9 : climate === "tropical" ? 7 : climate === "desert" ? 5 : 0;
     r.temp = Math.round(16 + bandOffset + (Math.random() * 9 - 4));
     if (r.weather === "snow") r.temp = Math.min(r.temp, 1);
     if (r.weather === "storm" || r.weather === "rain") r.temp -= 2;
@@ -933,9 +1010,16 @@ function powerBreakdown(w, ownerKey, units, enemy, opts) {
   }
   let terrMult = 1;
   if (isDef && opts.region) {
+    /* Defender terrain: the fortress TYPE bonus and the TERRAIN bonus
+       are independent multipliers and stack, exactly as in the APK
+       engine (defMult *= 1.30 for 要塞, then *= the terrain factor) —
+       so the new 沙漠 x1.08 / 冰原 x1.15 terrain factors are live on
+       every province, fortress-typed ones included. */
     const terrKey = (REGION_DEFS[opts.region.idx] || {}).terrain || "";
-    if (opts.region.type === "fortress") terrMult = 1.30;
-    else if (terrKey === "mountains") terrMult = 1.18;
+    if (opts.region.type === "fortress") terrMult *= 1.30;
+    if (terrKey === "mountains") terrMult *= 1.18;
+    else if (terrKey === "ice") terrMult *= 1.15;
+    else if (terrKey === "desert") terrMult *= 1.08;
   }
   const crossMult = opts.crossing === "sea" ? 0.80 : opts.crossing === "river" ? 0.88 : 1;
   let blunt = 1;
@@ -1080,7 +1164,7 @@ function recapLine(atkBd, defBd, weather, weatherMult, attackerWon) {
   if (Math.abs(diff(atkBd.techPct, defBd.techPct)) >= 7) {
     factors.push("科技等级" + (atkBd.techPct > defBd.techPct ? "攻方" : "守方") + "领先（+" + Math.max(atkBd.techPct, defBd.techPct) + "%）");
   }
-  if (defBd.terrainPct >= 30) factors.push("守方要塞地形 +30%");
+  if (defBd.terrainPct >= 30) factors.push("守方地形坚固（+" + defBd.terrainPct + "%）");
   else if (defBd.terrainPct > 0) factors.push("守方主场防线 +" + defBd.terrainPct + "%");
   if (atkBd.airdefBluntPct < 0) factors.push("守方防空削弱攻方空中力量 " + atkBd.airdefBluntPct + "%");
   if (atkBd.crossingPct <= -20) factors.push("跨海登陆让攻方先损两成战力");
@@ -1499,7 +1583,8 @@ function rerollWeights(seasonIdx, r) {
   const weights = new Map(table);
   const climate = REGION_DEFS[r.idx].climate || "temperate";
   const bump = (kind, delta) => { if (weights.has(kind)) weights.set(kind, Math.max(0, (weights.get(kind) || 0) + delta)); };
-  if (climate === "arctic") { bump("snow", 20); bump("clear", -8); bump("drought", -6); }
+  if (climate === "polar") { bump("snow", 26); bump("clear", -10); bump("drought", -6); bump("rain", -6); }
+  else if (climate === "arctic") { bump("snow", 20); bump("clear", -8); bump("drought", -6); }
   else if (climate === "tropical") { bump("rain", 10); bump("storm", 9); weights.delete("snow"); }
   else if (climate === "desert") { bump("clear", 16); bump("drought", 14); bump("rain", -8); weights.delete("snow"); }
   else if (climate === "subtropical") { bump("rain", 5); bump("snow", -4); }
@@ -1546,7 +1631,7 @@ function evolveWeather(w) {
     }
     const base = SEASON_TEMP[season] != null ? SEASON_TEMP[season] : 16;
     const climate = REGION_DEFS[r.idx].climate || "temperate";
-    const bandOffset = climate === "arctic" ? -9 : climate === "tropical" ? 7 : climate === "desert" ? 5 : 0;
+    const bandOffset = climate === "polar" ? -14 : climate === "arctic" ? -9 : climate === "tropical" ? 7 : climate === "desert" ? 5 : 0;
     r.temp = Math.round(base + bandOffset + (Math.random() * 9 - 4));
     if (r.weather === "snow") r.temp = Math.min(r.temp, 1);
     if (r.weather === "storm" || r.weather === "rain") r.temp -= 2;
@@ -1924,7 +2009,25 @@ function keyLines(w, from) {
     .filter((l) => ["battle", "event", "diplomacy", "system", "tech", "build", "advisor", "epic"].includes(l.kind))
     .map((l) => l.text);
 }
-const fmtN = (n) => Math.round(n).toLocaleString("zh-CN");
+/* Global number format (v1.9, same function spec as the APK): values
+   with |n| >= 10000 render in 万 units with ONE decimal, trailing .0
+   trimmed (10000 -> "1万", 116971 -> "11.7万", 1329223 -> "132.9万");
+   below 10000 the full number shows. Every big number in the app goes
+   through fmt/fmtN, so no digit string can ever grow long enough to
+   wrap onto a second line; .res-value/.big slots additionally run the
+   auto-shrink fit (fitBigNumbers) as a final guard. */
+function fmtNum(n) {
+  n = Math.round(Number(n) || 0);
+  if (Math.abs(n) < 10000) return String(n);
+  const neg = n < 0;
+  const a = Math.abs(n);
+  const tenths = Math.floor((a + 500) / 1000);
+  const whole = Math.floor(tenths / 10);
+  const frac = tenths % 10;
+  const s = frac === 0 ? whole + "万" : whole + "." + frac + "万";
+  return neg ? "-" + s : s;
+}
+const fmtN = fmtNum;
 
 function actGetState() {
   if (!world) return buildState(null);
@@ -2546,7 +2649,7 @@ function actRestart() {
 const TERRAIN_FILL = {
   mountains: "#6f6156", hills: "#8a825f", plains: "#77975c", coast: "#7ea55f",
   forest: "#3f6b41", island: "#7ea55f", tundra: "#b9c9cd", desert: "#dcbd7f",
-  wetlands: "#59826d", river: "#77975c", steppe: "#a8a065",
+  wetlands: "#59826d", river: "#77975c", steppe: "#a8a065", ice: "#c8dde8",
 };
 function capPt(idx) { const g = GEO_REGIONS[idx]; return { x: g.capX, y: g.capY }; }
 function cenPt(idx) { const g = GEO_REGIONS[idx]; return { x: g.cx, y: g.cy }; }
@@ -2738,12 +2841,7 @@ function toMapView(r) {
     prevOwner: r.prevOwner || null,
     unitsTotal: r.intelHidden ? 1 : Object.values(r.units).reduce((s, v) => s + v, 0) };
 }
-const SETUP_WEATHER = [
-  ["snow", -4], ["snow", -2], ["snow", -5], ["cloudy", -1], ["cloudy", 0], ["cloudy", 3], ["fog", 4],
-  ["clear", 5], ["clear", 6], ["cloudy", 4], ["rain", 6], ["snow", 1], ["rain", 7], ["clear", 8],
-  ["clear", 7], ["cloudy", 8], ["rain", 9], ["clear", 9], ["clear", 10], ["cloudy", 9], ["clear", 11],
-  ["rain", 12], ["clear", 12], ["clear", 13], ["rain", 13], ["clear", 14], ["rain", 15], ["storm", 19],
-];
+const SETUP_WEATHER = [["cloudy",0],["snow",-4],["clear",10],["cloudy",6],["clear",10],["cloudy",6],["rain",9],["rain",9],["cloudy",6],["clear",10],["clear",10],["cloudy",6],["clear",8],["clear",10],["rain",13],["clear",13],["clear",13],["clear",8],["rain",9],["clear",10],["fog",5],["cloudy",6],["clear",8],["cloudy",12],["cloudy",6],["clear",10],["cloudy",7],["cloudy",7],["cloudy",6],["cloudy",6],["cloudy",12],["clear",15],["rain",14],["clear",13],["storm",19],["rain",9],["fog",5],["rain",13],["cloudy",12],["cloudy",6],["rain",9],["cloudy",6],["clear",-4],["snow",-7],["snow",-7],["snow",-9],["snow",-7]];
 const SETUP_REGIONS = GEO_REGIONS.map((g) => ({ idx: g.id, name: g.name, capital: g.capital, type: g.type,
   terrain: g.terrain, ownerKey: g.owner, isCore: g.core, power: 0,
   weather: (SETUP_WEATHER[g.id] || [])[0] || "clear", temp: (SETUP_WEATHER[g.id] || [])[1] != null ? SETUP_WEATHER[g.id][1] : 12,
@@ -2761,9 +2859,9 @@ function renderMapStatic(mr, opts) {
   s += '<rect x="-400" y="-400" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" fill="url(#ocean)"/>';
   s += '<g class="view-g" transform="translate(' + mapView.tx + ' ' + mapView.ty + ') scale(' + mapView.k + ')">';
   s += '<rect x="-400" y="-400" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" fill="url(#ocean)"/>';
-  s += '<text x="52" y="430" font-size="' + labelPaint(LBL_SEA, mapView.k) + '" fill="#9fc6de" opacity="0.5" font-style="italic">黄 海</text>';
-  s += '<text x="540" y="330" font-size="' + labelPaint(LBL_SEA, mapView.k) + '" fill="#9fc6de" opacity="0.5" font-style="italic">东 海</text>';
-  s += '<text x="300" y="762" font-size="' + labelPaint(14, mapView.k) + '" fill="#9fc6de" opacity="0.45" font-style="italic">济州海峡</text>';
+  for (const sl of SEA_LABELS) {
+    s += '<text x="' + sl.x + '" y="' + sl.y + '" text-anchor="middle" font-size="' + labelPaint(sl.size || LBL_SEA, mapView.k) + '" fill="#9fc6de" opacity="0.5" font-style="italic">' + sl.name + '</text>';
+  }
   for (const g of GEO_REGIONS) s += '<path d="' + g.path + '" fill="#42563a" transform="translate(2.5 3.5)" opacity="0.55"/>';
   for (const r of mr) {
     const g = GEO_REGIONS[r.idx];
@@ -2794,8 +2892,10 @@ function renderMapStatic(mr, opts) {
     s += '<g><polyline points="' + rv.pts + '" fill="none" stroke="#4a90c2" stroke-width="2.6" opacity="0.65" stroke-linecap="round"/>' +
       '<text x="' + (lp[0] || 0) + '" y="' + ((lp[1] || 0) - 5) + '" font-size="' + labelPaint(LBL_GEO, mapView.k) + '" fill="#bfe0f5" stroke="#0c2233" stroke-width="2.2" paint-order="stroke" opacity="0.9">' + rv.name + '</text></g>';
   }
-  const c26 = capPt(26), c27 = capPt(27);
-  s += '<line x1="' + c26.x + '" y1="' + c26.y + '" x2="' + c27.x + '" y2="' + c27.y + '" stroke="#bfe3ff" stroke-opacity="0.45" stroke-width="1.4" stroke-dasharray="3 5"/>';
+  for (const pr of GEO_SEA_PAIRS) {
+    const ca = capPt(pr[0]), cb = capPt(pr[1]);
+    s += '<line x1="' + ca.x + '" y1="' + ca.y + '" x2="' + cb.x + '" y2="' + cb.y + '" stroke="#bfe3ff" stroke-opacity="0.45" stroke-width="1.4" stroke-dasharray="3 5"/>';
+  }
   // front lines
   (opts.adjacency || []).forEach((ns, a) => {
     for (const b of ns) {
@@ -2836,8 +2936,11 @@ function renderMapStatic(mr, opts) {
      Chungcheong) carry hand offsets so name and capital never stack —
      the 清州-under-忠清北道 cover-up in the 03:25 screenshot. */
   const lblTier = mapView.k < 1.35 ? 0 : mapView.k < 2.3 ? 1 : 2;
-  const NAME_OFF = { 12: [-18, -16], 13: [4, -15], 14: [20, 17], 15: [12, -12], 16: [-14, 14], 17: [-18, 16], 18: [-16, -13] };
-  const CAP_OFF = { 12: [-9, -3, "end"], 13: [7, 3, "start"], 14: [3, 13, "middle"], 15: [-5, 7, "middle"], 17: [-11, 11, "middle"], 18: [-9, -7, "middle"] };
+  const NAME_OFF = { 0: [0, -6], 1: [-14, -14], 2: [16, -12], 3: [-18, 4], 4: [16, 6], 5: [-16, 14], 6: [14, 16], 7: [-20, 2], 8: [16, -6], 9: [18, 10], 10: [-20, -12], 11: [16, 16], 12: [-14, 14], 13: [-6, 18],
+    14: [-16, 6], 15: [18, -8], 16: [0, 14], 17: [14, -14], 18: [-4, 16], 19: [22, -16], 20: [-24, -6], 21: [20, 8], 22: [-20, 12], 23: [0, 16], 24: [16, -8],
+    25: [10, -10], 26: [-16, 4], 27: [20, -10], 28: [-14, 12], 29: [-16, 0], 30: [18, -4], 31: [14, 12],
+    35: [-14, -8], 36: [14, 10], 39: [-16, -6], 40: [18, 6], 42: [0, 14], 43: [-10, -14], 44: [-16, 8] };
+  const CAP_OFF = { 4: [10, 2, "start"], 5: [-10, 2, "end"], 10: [-12, -2, "end"], 11: [12, 4, "start"], 18: [0, 10, "middle"], 19: [12, -6, "start"], 20: [-12, -4, "end"], 26: [-8, 6, "end"], 27: [10, -4, "start"] };
   for (const r of mr) {
     const g = GEO_REGIONS[r.idx];
     const color = nc(r.ownerKey);
@@ -2875,19 +2978,16 @@ function renderMapStatic(mr, opts) {
     const chipSc = labelPaint(LBL_CHIP, mapView.k) / LBL_CHIP * (LBL_CHIP / 8.6);
     s += '<g ' + (isMine ? 'data-unit-idx="' + r.idx + '" style="cursor:grab" ' : '') + 'transform="translate(' + (g.capX + 13) + ' ' + (g.capY - 13) + ') scale(' + chipSc + ')" pointer-events="all">' +
       '<rect x="-19" y="-8.5" width="38" height="17" rx="8.5" fill="' + color + '" stroke="#0c1c26" stroke-width="1.1" opacity="0.96"/>' +
-      '<text text-anchor="middle" y="3.2" font-size="8.6" font-weight="700" fill="#ffffff">⚔' + (r.intelHidden ? r.power + "?" : r.power) + '</text>' +
+      '<text text-anchor="middle" y="3.2" font-size="8.6" font-weight="700" fill="#ffffff">⚔' + (r.intelHidden ? fmtN(r.power) + "?" : fmtN(r.power)) + '</text>' +
       (isMine ? '<circle cx="15.5" cy="-6" r="2.4" fill="#ffd75e" stroke="#7a5b00" stroke-width="0.7"/>' : '') + '</g>';
   }
   s += '</g>';
-  // zoom controls / compass / attribution (outside the view transform)
-  s += '<g transform="translate(' + (MAP_W - 40) + ' 64)">';
-  const zoomBtns = [["放大地图", "+", "in"], ["缩小地图", "−", "out"]];
-  zoomBtns.forEach((zb, i) => {
-    s += '<g transform="translate(0 ' + (i * 44) + ')" data-zoom="' + zb[2] + '" style="cursor:pointer" role="button" aria-label="' + zb[0] + '"><circle r="17" fill="#0c1c26" opacity="0.78"/><text text-anchor="middle" y="6" font-size="17" font-weight="700" fill="#ffffff">' + zb[1] + '</text></g>';
-  });
-  s += '<g transform="translate(0 88)" data-zoom="reset" style="cursor:pointer" role="button" aria-label="恢复全图"><circle r="17" fill="#0c1c26" opacity="0.78"/><text text-anchor="middle" y="4.6" font-size="11.5" font-weight="700" fill="#ffffff">全</text></g></g>';
+  // compass / attribution (outside the view transform). Zoom +/−/reset
+  // buttons REMOVED by user ruling (they took up map space and collided
+  // with the province panel): zoom stays pinch (focal, 1–6×) + wheel +
+  // double-tap toggle, pan stays free-drag.
   s += '<g transform="translate(30 58)" opacity="0.9"><circle r="13" fill="#0c1c26" opacity="0.55"/><polygon points="0,-9 3.4,2 0,-0.6 -3.4,2" fill="#ffd75e"/><text y="-17" text-anchor="middle" font-size="11" font-weight="700" fill="#eaf3f9">北</text></g>';
-  s += '<text x="' + (MAP_W - 8) + '" y="' + (MAP_H - 8) + '" text-anchor="end" font-size="10" fill="#9fc6de" opacity="0.65">朝鲜半岛战区 · 边界/河流/城市 © Natural Earth</text>';
+  s += '<text x="' + (MAP_W - 8) + '" y="' + (MAP_H - 8) + '" text-anchor="end" font-size="10" fill="#9fc6de" opacity="0.65">融合大世界 · 边界/河流/山脉 © Natural Earth</text>';
   return s;
 }
 /* Spray rendering state (APK Spray parity): live particle streams keyed by
@@ -3183,13 +3283,13 @@ function renderMapDyn(mr, opts) {
    ===================================================================== */
 const ROLE_NAMES = { defense: "国防顾问", economy: "经济顾问", science: "科技顾问" };
 const TERRAIN_NAMES = { mountains: "山地", hills: "丘陵", plains: "平原", coast: "海岸", forest: "林地",
-  island: "岛屿", tundra: "冻原", desert: "荒漠", wetlands: "湿地", river: "河谷", steppe: "草原" };
+  island: "岛屿", tundra: "冻原", desert: "沙漠", wetlands: "湿地", river: "河谷", steppe: "草原", ice: "冰原" };
 const LOG_KIND_LABEL = {
-  battle: { label: "战斗", color: "#ff3b30" }, epic: { label: "大事", color: "#ff9500" },
-  event: { label: "事件", color: "#ffcc00" }, diplomacy: { label: "外交", color: "#007aff" },
-  tech: { label: "科技", color: "#af52de" }, build: { label: "建设", color: "#34c759" },
-  advisor: { label: "顾问", color: "#34c759" }, system: { label: "系统", color: "#8e8e93" },
-  season: { label: "季度", color: "#c7c7cc" },
+  battle: { label: "战斗", color: "#d92b20" }, epic: { label: "大事", color: "#b25f00" },
+  event: { label: "事件", color: "#9a6200" }, diplomacy: { label: "外交", color: "#0062cc" },
+  tech: { label: "科技", color: "#8944ab" }, build: { label: "建设", color: "#1f7a33" },
+  advisor: { label: "顾问", color: "#1f7a33" }, system: { label: "系统", color: "#636366" },
+  season: { label: "季度", color: "#48484a" },
 };
 const fmt = fmtN;
 const pctS = (v) => (v > 0 ? "+" : "") + v + "%";
@@ -3321,6 +3421,22 @@ function tweenNum(id, value) {
     if (t < 1) animNums[id].raf = requestAnimationFrame(step);
   };
   cur.raf = requestAnimationFrame(step);
+}
+
+/* Number-slot auto-fit: after the 万 format, if a value STILL exceeds
+   its slot (narrow phone, long tier/score strings), shrink that one
+   element's font stepwise until it fits on one line (floor 11px).
+   Runs after every main render; sizes reset from the CSS base each
+   time, so a shrinking value grows back. */
+function fitBigNumbers() {
+  const els = document.querySelectorAll(".res-value, .tier-flex .big, .rank-score");
+  els.forEach((el) => {
+    if (!el.dataset.baseFs) el.dataset.baseFs = String(parseFloat(getComputedStyle(el).fontSize) || 17);
+    let fs = parseFloat(el.dataset.baseFs);
+    el.style.fontSize = fs + "px";
+    let guard = 0;
+    while (el.scrollWidth > el.clientWidth + 1 && fs > 11 && guard < 24) { fs -= 1; el.style.fontSize = fs + "px"; guard++; }
+  });
 }
 
 /* ---------- sliding segmented control (motion package §2) ---------- */
@@ -3481,8 +3597,8 @@ function layoutDock() {
 }
 
 /* ---------- shared fragments ---------- */
-function sheetShell(title, closeAct, inner) {
-  return '<div class="sheetwrap" data-close="' + closeAct + '"><section class="sheet sheet-in" aria-label="' + esc(title) + '">' +
+function sheetShell(title, closeAct, inner, cls) {
+  return '<div class="sheetwrap" data-close="' + closeAct + '"><section class="sheet sheet-in' + (cls ? " " + cls : "") + '" aria-label="' + esc(title) + '">' +
     '<div class="sheet-grab" data-grab="1" aria-hidden="true"><span></span></div>' +
     '<div class="sheet-head"><h2>' + esc(title) + '</h2>' +
     '<button type="button" class="sheet-close" data-act="' + closeAct + '" aria-label="关闭' + esc(title) + '">✕</button></div>' +
@@ -3569,6 +3685,9 @@ function regionSheetHTML(region) {
     '<span class="dim"> · ' + esc(region.typeName) + ' · ' + esc(TERRAIN_NAMES[region.terrain] || region.terrain) + ' · 兵力 ' + fmt(region.power) + (region.intelHidden ? "（估算）" : "") + '</span>' +
     (region.isCore ? '<span class="core-badge">核心区</span>' : "") + '</p></div>' +
     '<div class="weather-chip"><div><p class="wname">' + esc(region.weatherName) + ' ' + region.temp + '°</p><p class="weff">' + esc(region.weatherEffect) + '</p></div></div></div>';
+  /* Control on ONE line: label + bar + percent share a single row. */
+  const ctrlVal = Math.round((FLOWV.control && FLOWV.control[region.idx] != null) ? FLOWV.control[region.idx] : (region.control != null ? region.control : 100));
+  h += '<div class="ctrl-row"><span class="ctrl-lab">控制</span><div class="ctrl-track"><div style="width:' + Math.max(0, Math.min(100, ctrlVal)) + '%;background:' + (owner ? owner.color : "#8e8e93") + '"></div></div><span class="ctrl-pct">' + ctrlVal + '%</span></div>';
   h += '<div class="chip-row"><span class="chip-lab">预报</span><span class="u-chip">' + esc(region.forecast.summary) + '</span>' +
     (!isMine && crossing === "sea" ? '<span class="u-chip">跨海 −20%</span>' : "") +
     (!isMine && crossing === "river" ? '<span class="u-chip">隔江 −12%</span>' : "") + '</div>';
@@ -3958,11 +4077,12 @@ function renderSetup() {
   }
   root.innerHTML =
     '<div class="scrim top-scrim"></div>' +
-    '<div class="hud-col"><div class="hud-inner"><div class="setup-title hud-dark"><h1>养一个现代国家</h1><p>朝鲜半岛真实地图 · 选一个国家，看着它自己赚钱、扩军、打仗</p></div></div></div>' +
+    '<div class="hud-col"><div class="hud-inner"><div class="setup-title hud-dark"><h1>养一个现代国家</h1><p>融合大世界 · 选一个国家，看着它自己赚钱、扩军、打仗</p></div></div></div>' +
     '<div class="sheetwrap"><section class="sheet setup-sheet" aria-label="选择国家">' +
+    (saveIncompatible ? '<p class="setup-intro" style="background:#fff4e0;color:#7a4a00;font-weight:600">旧存档提示：这台设备上有一份旧地图的存档，和新世界（47 省）对不上，没法接着打。旧档没有动它——选个国家开新局就行。</p>' : "") +
     '<p class="setup-intro">选一个国家，时间自己流淌；把兵像水一样泼向邻省，冲满就易主。没空管时，定个方略让它自己长。</p>' +
     cards +
-    '<p class="setup-foot">28 个真实省份、四国同时自动发展。统一全图获胜，丢光省份落败；关掉页面国家也按方略继续长，回来有离线汇总（按离开时长折算，每 20 分钟一季、最多 24 季；存档保存在这台设备的浏览器里）。</p>' +
+    '<p class="setup-foot">47 个虚构省份、四国同时自动发展。统一全图获胜，丢光省份落败；关掉页面国家也按方略继续长，回来有离线汇总（按离开时长折算，每 20 分钟一季、最多 24 季；存档保存在这台设备的浏览器里）。</p>' +
     '</section></div>';
   document.getElementById("dockSlot").style.display = "none";
   renderMap();
@@ -3974,7 +4094,7 @@ function renderMain() {
   const sel = UI.selected != null ? S.regions[UI.selected] : undefined;
   const income = S.playerIncome;
   const netMoney = income ? income.money - income.maintenance : 0;
-  const totalRegions = S.regions.length || 28;
+  const totalRegions = S.regions.length || 47;
   const seasonName = S.catalog.seasonNames[Math.max(0, S.quarter - 1) % 4] || "春";
   const sheetOpen = UI.tab !== "map" || sel != null;
   let h = "";
@@ -4102,7 +4222,7 @@ function renderMain() {
         '<p class="pop-lab">方略 · 国家往哪长</p>' +
         segHTML("strategy", Object.entries(strategies).map(([key, s]) => ({ key: key, label: s.name })), S.strategy, false) +
         '<div class="host-row"><span class="pop-lab" style="margin:0">托管</span>' +
-        '<button type="button" class="toggle-btn' + (S.autopilot ? " on-green" : "") + '" data-act="autopilot" aria-pressed="' + S.autopilot + '" style="height:32px;font-size:13px;padding:0 12px">托管' + (S.autopilot ? "开" : "关") + '</button>' +
+        '<button type="button" class="toggle-btn' + (S.autopilot ? " on-green" : "") + '" data-act="autopilot" aria-pressed="' + S.autopilot + '" style="font-size:13px">托管' + (S.autopilot ? "开" : "关") + '</button>' +
         (S.autopilot ? [["produce", "生产"], ["research", "科研"], ["attack", "进攻"]].map(([f, nm]) => '<button type="button" class="host-chip' + (hf[f] ? " on" : "") + '" data-act="host-flag" data-flag="' + f + '" aria-pressed="' + !!hf[f] + '">' + nm + (hf[f] ? "开" : "关") + '</button>').join("") : "") +
         '</div>' +
         '<p class="strat-live">' + (S.autopilot
@@ -4123,7 +4243,8 @@ function renderMain() {
   }
   // sheets
   if (UI.tab === "map" && sel && player) {
-    h += sheetShell(sel.name + " · " + ((GEO_REGIONS[sel.idx] || {}).capital || ""), "close-sheet", regionSheetHTML(sel));
+    const gg = GEO_REGIONS[sel.idx] || {};
+    h += sheetShell(sel.name + (gg.kana ? "（" + gg.kana + "）" : "") + " · " + (gg.capital || "") + (gg.capital_kana ? "（" + gg.capital_kana + "）" : ""), "close-sheet", regionSheetHTML(sel), "prov-sheet");
   } else if (UI.tab === "growth" && player) {
     h += sheetShell("国家成长", "close-tab", growthSheetHTML());
   } else if (UI.tab === "situation") {
@@ -4134,7 +4255,7 @@ function renderMain() {
     const won = S.phase === "won";
     h += '<div class="center-back"><div class="end-card modal-in"><p class="emoji">' + (won ? "🏆" : "🏳") + '</p>' +
       '<h2>' + (won ? "全境统一" : "国家覆灭") + '</h2><p>' +
-      (won ? "历经 " + S.quarter + " 个季度，" + esc(player ? player.name : "") + "以「" + esc(S.playerTier) + "」之姿统一了半岛全部 " + totalRegions + " 个省份。最终国库 " + fmt(player ? player.money : 0) + "，科技 " + (player ? player.techLevel : 1) + " 级。"
+      (won ? "历经 " + S.quarter + " 个季度，" + esc(player ? player.name : "") + "以「" + esc(S.playerTier) + "」之姿统一了全图全部 " + totalRegions + " 个省份。最终国库 " + fmt(player ? player.money : 0) + "，科技 " + (player ? player.techLevel : 1) + " 级。"
            : "第 " + S.quarter + " 季度，" + esc(player ? player.name : "") + "失去了最后一个省份。换个国家再战一局。") +
       '</p><button type="button" class="modal-btn" data-act="restart-confirm">再来一局</button></div></div>';
   }
@@ -4153,6 +4274,7 @@ function renderMain() {
   layoutAllSegs();
   layoutDock();
   if (player) { tweenNum("resMoney", player.money); tweenNum("resIndustry", player.industry); }
+  fitBigNumbers();
   syncClock();
 }
 function guideTargetCalc() {
@@ -5474,7 +5596,7 @@ document.addEventListener("click", (e) => {
   const app = document.getElementById("app");
   app.innerHTML =
     '<div class="stage">' +
-    '<div class="mapwrap"><svg id="mapStatic" viewBox="0 0 ' + MAP_W + ' ' + MAP_H + '" preserveAspectRatio="xMidYMid meet" role="application" aria-label="朝鲜半岛真实地理战区地图：点击区域查看，拖动己方部队标记到敌区发起进攻"></svg>' +
+    '<div class="mapwrap"><svg id="mapStatic" viewBox="0 0 ' + MAP_W + ' ' + MAP_H + '" preserveAspectRatio="xMidYMid meet" role="application" aria-label="融合大世界地图：点击区域查看，拖动己方部队标记到敌区发起进攻"></svg>' +
     '<svg id="mapDyn" viewBox="0 0 ' + MAP_W + ' ' + MAP_H + '" preserveAspectRatio="xMidYMid meet" style="pointer-events:none" aria-hidden="true"></svg></div>' +
     '<div id="uiRoot" style="position:absolute;inset:0;pointer-events:none"></div>' +
     '<div class="dockwrap" id="dockSlot"><div>' + dockHTML() + '</div></div>' +
